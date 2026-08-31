@@ -1,23 +1,34 @@
 /* ============================================================
    Inventario Tecnikor - hoja de estilos unica (sin CDN)
-   Paleta sobria, pensada para uso en un PC de escritorio.
+   Paleta de marca:
+     #0E2A47  azul marino   (--tk-navy)
+     #1677BB  azul          (--tk-blue)
+     #6B727A  gris          (--tk-gray)
+     #FFFFFF  blanco        (--tk-white)
    ============================================================ */
 
 :root {
-    --color-fondo: #f4f5f7;
-    --color-panel: #ffffff;
-    --color-texto: #1f2933;
-    --color-texto-suave: #647382;
-    --color-borde: #d9dee4;
-    --color-primario: #1f6feb;
-    --color-primario-oscuro: #1a5fd0;
+    --tk-navy: #0E2A47;
+    --tk-blue: #1677BB;
+    --tk-blue-oscuro: #115e93;
+    --tk-gray: #6B727A;
+    --tk-white: #FFFFFF;
+
+    --color-fondo: #eef1f4;
+    --color-panel: var(--tk-white);
+    --color-texto: #1f2a37;
+    --color-texto-suave: var(--tk-gray);
+    --color-borde: #dbe0e6;
+
+    /* semaforo de stock / mensajes (se mantienen verde/rojo por claridad) */
     --color-exito-fondo: #e6f4ea;
     --color-exito-texto: #1e7d3b;
     --color-error-fondo: #fdecea;
     --color-error-texto: #b3261e;
-    --color-alerta: #c9302c;
+    --color-alerta: #c0392b;
+
     --radio: 8px;
-    --sombra: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --sombra: 0 1px 3px rgba(14, 42, 71, 0.10);
 }
 
 * { box-sizing: border-box; }
@@ -30,31 +41,62 @@ body {
     line-height: 1.5;
 }
 
+a { color: var(--tk-blue); }
+
 /* ---------- Barra superior ---------- */
 .topbar {
-    background: var(--color-panel);
-    border-bottom: 1px solid var(--color-borde);
-    padding: 0 24px;
+    background: var(--tk-navy);
+    border-bottom: 3px solid var(--tk-blue);
+    padding: 10px 24px;
     display: flex;
     align-items: center;
-    gap: 32px;
-    height: 56px;
+    gap: 40px;
     box-shadow: var(--sombra);
 }
 .marca {
-    font-weight: 700;
-    font-size: 1.05rem;
-    color: var(--color-texto);
+    display: flex;
+    align-items: center;
+    gap: 12px;
     text-decoration: none;
+    color: var(--tk-white);
 }
-.menu { display: flex; gap: 20px; }
+.marca-logo {
+    height: 46px;
+    width: 46px;
+    border-radius: 50%;              /* recorta las esquinas negras del logo */
+    object-fit: cover;
+    background: var(--tk-white);
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    flex-shrink: 0;
+}
+.marca-texto {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+    font-size: 1.05rem;
+    font-weight: 400;
+}
+.marca-texto strong { font-weight: 700; }
+.marca-texto small {
+    font-size: 0.68rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 2px;
+}
+
+.menu { display: flex; gap: 22px; }
 .menu a {
-    color: var(--color-texto-suave);
+    color: rgba(255, 255, 255, 0.82);
     text-decoration: none;
     font-size: 0.95rem;
     padding: 4px 0;
+    border-bottom: 2px solid transparent;
 }
-.menu a:hover { color: var(--color-primario); }
+.menu a:hover {
+    color: var(--tk-white);
+    border-bottom-color: var(--tk-blue);
+}
 
 /* ---------- Contenedor principal ---------- */
 .contenedor {
@@ -62,8 +104,8 @@ body {
     margin: 28px auto;
     padding: 0 24px;
 }
-h1 { font-size: 1.5rem; margin: 0 0 20px; }
-h2 { font-size: 1.15rem; margin: 32px 0 12px; }
+h1 { font-size: 1.5rem; margin: 0 0 20px; color: var(--tk-navy); }
+h2 { font-size: 1.15rem; margin: 32px 0 12px; color: var(--tk-navy); }
 
 .fila-titulo {
     display: flex;
@@ -76,6 +118,7 @@ h2 { font-size: 1.15rem; margin: 32px 0 12px; }
 .tarjeta {
     background: var(--color-panel);
     border: 1px solid var(--color-borde);
+    border-top: 3px solid var(--tk-blue);
     border-radius: var(--radio);
     padding: 18px 22px;
     min-width: 160px;
@@ -83,9 +126,9 @@ h2 { font-size: 1.15rem; margin: 32px 0 12px; }
     flex-direction: column;
     box-shadow: var(--sombra);
 }
-.tarjeta-numero { font-size: 2rem; font-weight: 700; }
+.tarjeta-numero { font-size: 2rem; font-weight: 700; color: var(--tk-navy); }
 .tarjeta-etiqueta { color: var(--color-texto-suave); font-size: 0.9rem; }
-.tarjeta-alerta { border-color: var(--color-alerta); }
+.tarjeta-alerta { border-top-color: var(--color-alerta); }
 .tarjeta-alerta .tarjeta-numero { color: var(--color-alerta); }
 
 /* ---------- Tablas ---------- */
@@ -105,12 +148,12 @@ th, td {
     font-size: 0.92rem;
 }
 th {
-    background: #fafbfc;
+    background: #f4f6f8;
     color: var(--color-texto-suave);
     font-weight: 600;
 }
 tbody tr:last-child td { border-bottom: none; }
-tbody tr:hover { background: #f7f9fc; }
+tbody tr:hover { background: #f5f8fb; }
 .num { text-align: right; font-variant-numeric: tabular-nums; }
 .mono { font-family: "Consolas", "Courier New", monospace; font-size: 0.85rem; }
 .stock-bajo { color: var(--color-alerta); font-weight: 700; }
@@ -140,25 +183,25 @@ tbody tr:hover { background: #f7f9fc; }
     font-family: inherit;
 }
 .boton {
-    background: var(--color-primario);
+    background: var(--tk-blue);
     color: #fff;
     padding: 8px 16px;
 }
-.boton:hover { background: var(--color-primario-oscuro); }
+.boton:hover { background: var(--tk-blue-oscuro); }
 .boton-secundario {
     background: transparent;
     color: var(--color-texto-suave);
     border-color: var(--color-borde);
     padding: 8px 16px;
 }
-.boton-secundario:hover { color: var(--color-texto); }
+.boton-secundario:hover { color: var(--tk-navy); border-color: var(--tk-gray); }
 .boton-mini {
-    background: #eef1f5;
-    color: var(--color-texto);
+    background: #eef1f4;
+    color: var(--tk-navy);
     padding: 4px 10px;
     font-size: 0.82rem;
 }
-.boton-mini:hover { background: #e2e7ee; }
+.boton-mini:hover { background: #e1e6ec; }
 .boton-peligro { background: #fbe9e7; color: var(--color-error-texto); }
 .boton-peligro:hover { background: #f6d7d3; }
 
@@ -183,7 +226,7 @@ tbody tr:hover { background: #f7f9fc; }
     max-width: 720px;
 }
 .campo { margin-bottom: 16px; display: flex; flex-direction: column; }
-.campo label { font-weight: 600; font-size: 0.88rem; margin-bottom: 4px; }
+.campo label { font-weight: 600; font-size: 0.88rem; margin-bottom: 4px; color: var(--tk-navy); }
 .fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .fila-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 
@@ -197,13 +240,14 @@ input, select, textarea {
     color: var(--color-texto);
 }
 input:focus, select:focus, textarea:focus {
-    outline: 2px solid rgba(31, 111, 235, 0.35);
-    border-color: var(--color-primario);
+    outline: 2px solid rgba(22, 119, 187, 0.35);
+    border-color: var(--tk-blue);
 }
 input[readonly] { background: #f0f2f5; color: var(--color-texto-suave); }
 .solo-lectura {
     font-size: 1.4rem;
     font-weight: 700;
+    color: var(--tk-navy);
     padding: 4px 0;
 }
 .ayuda { color: var(--color-texto-suave); font-size: 0.8rem; margin-top: 2px; }
@@ -218,8 +262,16 @@ input[readonly] { background: #f0f2f5; color: var(--color-texto-suave); }
     margin-bottom: 20px;
     font-size: 0.92rem;
 }
-.alerta-exito { background: var(--color-exito-fondo); color: var(--color-exito-texto); }
-.alerta-error { background: var(--color-error-fondo); color: var(--color-error-texto); }
+.alerta-exito {
+    background: var(--color-exito-fondo);
+    color: var(--color-exito-texto);
+    border-left: 4px solid var(--color-exito-texto);
+}
+.alerta-error {
+    background: var(--color-error-fondo);
+    color: var(--color-error-texto);
+    border-left: 4px solid var(--color-error-texto);
+}
 
 /* ---------- Varios ---------- */
 .vacio {
@@ -239,5 +291,6 @@ input[readonly] { background: #f0f2f5; color: var(--color-texto-suave); }
 
 @media (max-width: 720px) {
     .fila-2, .fila-3 { grid-template-columns: 1fr; }
-    .topbar { flex-wrap: wrap; height: auto; padding: 12px 16px; gap: 12px; }
+    .topbar { flex-wrap: wrap; padding: 12px 16px; gap: 12px; }
+    .marca-texto small { display: none; }
 }

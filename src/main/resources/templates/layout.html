@@ -19,12 +19,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- se sustituye por el <title> de la pagina concreta -->
     <title th:replace="${titulo}">Inventario Tecnikor</title>
+    <link rel="icon" type="image/jpeg" th:href="@{/img/logo-tecnikor.jpg}">
     <link rel="stylesheet" th:href="@{/css/styles.css}">
 </head>
 <body>
 
 <header class="topbar">
-    <a class="marca" th:href="@{/}">📦 Inventario Tecnikor</a>
+    <a class="marca" th:href="@{/}">
+        <img class="marca-logo" th:src="@{/img/logo-tecnikor.jpg}" alt="Tecnikor">
+        <span class="marca-texto">
+            Inventario <strong>Tecnikor</strong>
+            <small>Soluciones para linea blanca</small>
+        </span>
+    </a>
     <nav class="menu">
         <a th:href="@{/}">Dashboard</a>
         <a th:href="@{/productos}">Productos</a>
