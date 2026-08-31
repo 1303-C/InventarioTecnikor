@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: main(~{::title}, ~{::section})}">
+<head>
+    <title th:text="${titulo} ?: 'Error'">Error</title>
+</head>
+<body>
+<section>
+    <h1 th:text="${titulo} ?: 'Ha ocurrido un error'">Error</h1>
+    <p class="alerta alerta-error" th:text="${mensaje} ?: 'Algo salio mal.'">Detalle del error</p>
+    <a class="boton" th:href="@{/}">Volver al inicio</a>
+</section>
+</body>
+</html>

@@ -15,7 +15,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Positive;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 /**
  * Registro historico de cada entrada o salida de stock de un producto.
@@ -71,7 +71,7 @@ public class MovimientoInventario {
     private String responsable;
 
     @Column(nullable = false, updatable = false)
-    private Instant fecha;
+    private LocalDateTime fecha;
 
     protected MovimientoInventario() {
     }
@@ -92,7 +92,7 @@ public class MovimientoInventario {
 
     @PrePersist
     void alCrear() {
-        this.fecha = Instant.now();
+        this.fecha = LocalDateTime.now();
     }
 
     // --- Getters (sin setters: un movimiento es inmutable una vez creado) ---
@@ -125,7 +125,7 @@ public class MovimientoInventario {
         return responsable;
     }
 
-    public Instant getFecha() {
+    public LocalDateTime getFecha() {
         return fecha;
     }
 }

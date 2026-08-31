@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: main(~{::title}, ~{::section})}">
+<head>
+    <title>Productos · Inventario Tecnikor</title>
+</head>
+<body>
+<section>
+    <div class="fila-titulo">
+        <h1>Productos</h1>
+        <a class="boton" th:href="@{/productos/nuevo}">+ Nuevo producto</a>
+    </div>
+
+    <form class="buscador" method="get" th:action="@{/productos}">
+        <input type="text" name="q" th:value="${q}"
+               placeholder="Buscar por nombre, marca o numero de parte...">
+        <button type="submit">Buscar</button>
+        <a th:if="${q != null and !q.isBlank()}" class="boton-secundario" th:href="@{/productos}">Limpiar</a>
+    </form>
+
+    <p class="vacio" th:if="${productos.isEmpty()}">
+        No hay productos que coincidan.
+    </p>
+
+    <table th:unless="${productos.isEmpty()}">
+        <thead>
+        <tr>
+            <th>Codigo QR</th>
+            <th>Nombre</th>
+            <th>Categoria</th>
+            <th>Marca</th>
+            <th>Ubicacion</th>
+            <th class="num">Stock</th>
+            <th class="num">Minimo</th>
+            <th class="num">Precio</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="p : ${productos}">
+            <td class="mono" th:text="${p.codigoQr}">QR</td>
+            <td th:text="${p.nombre}">Nombre</td>
+            <td th:text="${p.categoria.etiqueta}">Categoria</td>
+            <td th:text="${p.marca}">-</td>
+            <td th:text="${p.ubicacion}">-</td>
+            <td class="num" th:classappend="${p.estaBajoDeStock()} ? 'stock-bajo'"
+                th:text="${p.stockActual}">0</td>
+            <td class="num" th:text="${p.stockMinimo}">0</td>
+            <td class="num" th:text="${p.precioVenta != null} ? ${#numbers.formatDecimal(p.precioVenta, 1, 'POINT', 2, 'COMMA')} : '—'">0</td>
+            <td class="acciones">
+                <a class="boton-mini" th:href="@{/productos/{id}/editar(id=${p.id})}">Editar</a>
+                <form method="post" th:action="@{/productos/{id}/desactivar(id=${p.id})}"
+                      onsubmit="return confirm('¿Desactivar este producto?');">
+                    <button type="submit" class="boton-mini boton-peligro">Desactivar</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+</body>
+</html>

@@ -17,7 +17,7 @@ import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
@@ -103,10 +103,10 @@ public class Producto {
     private boolean activo = true;
 
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
-    private Instant fechaCreacion;
+    private LocalDateTime fechaCreacion;
 
     @Column(name = "fecha_actualizacion", nullable = false)
-    private Instant fechaActualizacion;
+    private LocalDateTime fechaActualizacion;
 
     // JPA exige un constructor sin argumentos (puede ser protected).
     protected Producto() {
@@ -123,14 +123,14 @@ public class Producto {
 
     @PrePersist
     void alCrear() {
-        Instant ahora = Instant.now();
+        LocalDateTime ahora = LocalDateTime.now();
         this.fechaCreacion = ahora;
         this.fechaActualizacion = ahora;
     }
 
     @PreUpdate
     void alActualizar() {
-        this.fechaActualizacion = Instant.now();
+        this.fechaActualizacion = LocalDateTime.now();
     }
 
     // --- Logica de dominio ---
@@ -234,11 +234,11 @@ public class Producto {
         this.activo = activo;
     }
 
-    public Instant getFechaCreacion() {
+    public LocalDateTime getFechaCreacion() {
         return fechaCreacion;
     }
 
-    public Instant getFechaActualizacion() {
+    public LocalDateTime getFechaActualizacion() {
         return fechaActualizacion;
     }
 

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: main(~{::title}, ~{::section})}">
+<head>
+    <title th:text="${esEdicion} ? 'Editar producto' : 'Nuevo producto'">Producto</title>
+</head>
+<body>
+<section>
+    <h1 th:text="${esEdicion} ? 'Editar producto' : 'Nuevo producto'">Producto</h1>
+
+    <!-- th:object enlaza todo el formulario con el atributo "form" del model.
+         Dentro, *{campo} es una abreviatura de ${form.campo}. -->
+    <form class="formulario" method="post" th:object="${form}"
+          th:action="${esEdicion} ? @{/productos/{id}(id=*{id})} : @{/productos}">
+
+        <!-- id: solo relevante en edicion; en alta va vacio -->
+        <input type="hidden" th:field="*{id}">
+
+        <div class="campo">
+            <label for="codigoQr">Codigo QR *</label>
+            <input type="text" id="codigoQr" th:field="*{codigoQr}"
+                   th:readonly="${esEdicion}" placeholder="Escanea o escribe el codigo">
+            <small th:if="${esEdicion}" class="ayuda">El codigo QR no se puede cambiar.</small>
+            <span class="error" th:if="${#fields.hasErrors('codigoQr')}" th:errors="*{codigoQr}"></span>
+        </div>
+
+        <div class="campo">
+            <label for="nombre">Nombre *</label>
+            <input type="text" id="nombre" th:field="*{nombre}">
+            <span class="error" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}"></span>
+        </div>
+
+        <div class="campo">
+            <label for="categoria">Categoria *</label>
+            <select id="categoria" th:field="*{categoria}">
+                <option value="">— Selecciona —</option>
+                <option th:each="c : ${categorias}" th:value="${c}" th:text="${c.etiqueta}">Cat</option>
+            </select>
+            <span class="error" th:if="${#fields.hasErrors('categoria')}" th:errors="*{categoria}"></span>
+        </div>
+
+        <div class="fila-2">
+            <div class="campo">
+                <label for="marca">Marca</label>
+                <input type="text" id="marca" th:field="*{marca}">
+                <span class="error" th:if="${#fields.hasErrors('marca')}" th:errors="*{marca}"></span>
+            </div>
+            <div class="campo">
+                <label for="numeroParte">Numero de parte</label>
+                <input type="text" id="numeroParte" th:field="*{numeroParte}" placeholder="Ej. DA97-12345A">
+                <span class="error" th:if="${#fields.hasErrors('numeroParte')}" th:errors="*{numeroParte}"></span>
+            </div>
+        </div>
+
+        <div class="campo">
+            <label for="descripcion">Descripcion</label>
+            <textarea id="descripcion" rows="2" th:field="*{descripcion}"></textarea>
+            <span class="error" th:if="${#fields.hasErrors('descripcion')}" th:errors="*{descripcion}"></span>
+        </div>
+
+        <div class="campo">
+            <label for="ubicacion">Ubicacion en bodega</label>
+            <input type="text" id="ubicacion" th:field="*{ubicacion}" placeholder="Ej. Pasillo 3 / Estante B">
+            <span class="error" th:if="${#fields.hasErrors('ubicacion')}" th:errors="*{ubicacion}"></span>
+        </div>
+
+        <div class="fila-3">
+            <!-- Stock inicial: solo al crear -->
+            <div class="campo" th:unless="${esEdicion}">
+                <label for="stockInicial">Stock inicial *</label>
+                <input type="number" id="stockInicial" min="0" th:field="*{stockInicial}">
+                <span class="error" th:if="${#fields.hasErrors('stockInicial')}" th:errors="*{stockInicial}"></span>
+            </div>
+            <!-- Al editar, el stock no se toca aqui: se mantiene su valor y se
+                 informa. Cambia solo registrando entradas/salidas. -->
+            <input type="hidden" th:field="*{stockInicial}" th:if="${esEdicion}">
+            <div class="campo" th:if="${esEdicion}">
+                <label>Stock actual</label>
+                <output class="solo-lectura" th:text="${producto.stockActual}">0</output>
+                <small class="ayuda">Se modifica con entradas / salidas.</small>
+            </div>
+
+            <div class="campo">
+                <label for="stockMinimo">Stock minimo *</label>
+                <input type="number" id="stockMinimo" min="0" th:field="*{stockMinimo}">
+                <span class="error" th:if="${#fields.hasErrors('stockMinimo')}" th:errors="*{stockMinimo}"></span>
+            </div>
+
+            <div class="campo">
+                <label for="precioVenta">Precio de venta</label>
+                <input type="number" id="precioVenta" step="0.01" min="0" th:field="*{precioVenta}">
+                <span class="error" th:if="${#fields.hasErrors('precioVenta')}" th:errors="*{precioVenta}"></span>
+            </div>
+        </div>
+
+        <div class="acciones-form">
+            <button type="submit" class="boton" th:text="${esEdicion} ? 'Guardar cambios' : 'Crear producto'">Guardar</button>
+            <a class="boton-secundario" th:href="@{/productos}">Cancelar</a>
+        </div>
+    </form>
+</section>
+</body>
+</html>

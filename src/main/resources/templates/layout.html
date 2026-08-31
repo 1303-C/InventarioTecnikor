@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<!--
+  Plantilla base. Con Thymeleaf "puro" (sin librerias extra) el patron es:
+
+    - Aqui definimos un fragmento "main" que recibe dos trozos de HTML:
+      el <title> y el contenido de la pagina.
+    - Cada pagina (dashboard.html, productos/lista.html, ...) hace en su
+      etiqueta <html>:
+          th:replace="~{layout :: main(~{::title}, ~{::section})}"
+      es decir: "reemplazame por el fragmento main de layout, pasandole
+      MI <title> y MI <section>".
+
+  Asi no repetimos <head>, menu ni pie en cada pagina.
+-->
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:fragment="main(titulo, contenido)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- se sustituye por el <title> de la pagina concreta -->
+    <title th:replace="${titulo}">Inventario Tecnikor</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+
+<header class="topbar">
+    <a class="marca" th:href="@{/}">📦 Inventario Tecnikor</a>
+    <nav class="menu">
+        <a th:href="@{/}">Dashboard</a>
+        <a th:href="@{/productos}">Productos</a>
+        <a th:href="@{/productos/nuevo}">+ Nuevo producto</a>
+    </nav>
+</header>
+
+<main class="contenedor">
+    <!-- Mensaje de exito que llega por flash attribute tras un redirect -->
+    <div class="alerta alerta-exito" th:if="${mensajeExito}" th:text="${mensajeExito}"></div>
+
+    <!-- Aqui se inyecta el <section> de la pagina concreta -->
+    <div th:replace="${contenido}">Contenido de la pagina</div>
+</main>
+
+<footer class="pie">
+    <span>Inventario Tecnikor · repuestos de linea blanca</span>
+</footer>
+
+</body>
+</html>

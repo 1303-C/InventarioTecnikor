@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: main(~{::title}, ~{::section})}">
+<head>
+    <title>Dashboard · Inventario Tecnikor</title>
+</head>
+<body>
+<section>
+    <h1>Dashboard</h1>
+
+    <div class="tarjetas">
+        <div class="tarjeta">
+            <span class="tarjeta-numero" th:text="${totalActivos}">0</span>
+            <span class="tarjeta-etiqueta">Productos activos</span>
+        </div>
+        <div class="tarjeta" th:classappend="${cantidadStockBajo > 0} ? 'tarjeta-alerta'">
+            <span class="tarjeta-numero" th:text="${cantidadStockBajo}">0</span>
+            <span class="tarjeta-etiqueta">Con stock bajo</span>
+        </div>
+    </div>
+
+    <h2>Stock bajo</h2>
+    <p class="vacio" th:if="${stockBajo.isEmpty()}">
+        Todo en orden: ningun producto por debajo de su minimo. ✅
+    </p>
+    <table th:unless="${stockBajo.isEmpty()}">
+        <thead>
+        <tr>
+            <th>Producto</th>
+            <th>Categoria</th>
+            <th>Ubicacion</th>
+            <th class="num">Stock</th>
+            <th class="num">Minimo</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="p : ${stockBajo}">
+            <td th:text="${p.nombre}">Nombre</td>
+            <td th:text="${p.categoria.etiqueta}">Categoria</td>
+            <td th:text="${p.ubicacion}">-</td>
+            <td class="num stock-bajo" th:text="${p.stockActual}">0</td>
+            <td class="num" th:text="${p.stockMinimo}">0</td>
+            <td><a class="boton-mini" th:href="@{/productos/{id}/editar(id=${p.id})}">Ver</a></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h2>Ultimos movimientos</h2>
+    <p class="vacio" th:if="${ultimosMovimientos.isEmpty()}">
+        Aun no hay entradas ni salidas registradas.
+    </p>
+    <table th:unless="${ultimosMovimientos.isEmpty()}">
+        <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Producto</th>
+            <th>Tipo</th>
+            <th class="num">Cantidad</th>
+            <th class="num">Stock resultante</th>
+            <th>Responsable</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="m : ${ultimosMovimientos}">
+            <td th:text="${#temporals.format(m.fecha, 'dd/MM/yyyy HH:mm')}">fecha</td>
+            <td th:text="${m.producto.nombre}">Producto</td>
+            <td>
+                <span class="etiqueta"
+                      th:classappend="${m.tipo.name() == 'ENTRADA'} ? 'etiqueta-entrada' : 'etiqueta-salida'"
+                      th:text="${m.tipo.etiqueta}">Tipo</span>
+            </td>
+            <td class="num" th:text="${m.cantidad}">0</td>
+            <td class="num" th:text="${m.stockResultante}">0</td>
+            <td th:text="${m.responsable}">-</td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+</body>
+</html>
