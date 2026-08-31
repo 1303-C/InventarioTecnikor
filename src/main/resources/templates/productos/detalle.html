@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: main(~{::title}, ~{::section})}">
+<head>
+    <title th:text="${producto.nombre} + ' · Inventario Tecnikor'">Producto</title>
+</head>
+<body>
+<section>
+    <div class="fila-titulo">
+        <h1 th:text="${producto.nombre}">Nombre del producto</h1>
+        <a class="boton-secundario" th:href="@{/productos/{id}/editar(id=${producto.id})}">Editar datos</a>
+    </div>
+
+    <div class="detalle">
+        <!-- Panel de stock + acciones -->
+        <div class="detalle-stock">
+            <span class="detalle-stock-numero"
+                  th:classappend="${producto.estaBajoDeStock()} ? 'stock-bajo'"
+                  th:text="${producto.stockActual}">0</span>
+            <span class="detalle-stock-etiqueta">unidades en stock</span>
+            <span class="badge-alerta" th:if="${producto.estaBajoDeStock()}">
+                Por debajo del minimo (<span th:text="${producto.stockMinimo}">0</span>)
+            </span>
+
+            <div class="detalle-acciones">
+                <a class="boton boton-entrada"
+                   th:href="@{/productos/{id}/movimientos/nuevo(id=${producto.id},tipo='ENTRADA')}">
+                    + Registrar entrada
+                </a>
+                <a class="boton boton-salida"
+                   th:href="@{/productos/{id}/movimientos/nuevo(id=${producto.id},tipo='SALIDA')}">
+                    − Registrar salida
+                </a>
+            </div>
+        </div>
+
+        <!-- Ficha de datos -->
+        <dl class="detalle-datos">
+            <dt>Codigo QR</dt><dd class="mono" th:text="${producto.codigoQr}">QR</dd>
+            <dt>Categoria</dt><dd th:text="${producto.categoria.etiqueta}">-</dd>
+            <dt>Marca</dt><dd th:text="${producto.marca} ?: '—'">-</dd>
+            <dt>Numero de parte</dt><dd th:text="${producto.numeroParte} ?: '—'">-</dd>
+            <dt>Ubicacion</dt><dd th:text="${producto.ubicacion} ?: '—'">-</dd>
+            <dt>Stock minimo</dt><dd th:text="${producto.stockMinimo}">0</dd>
+            <dt>Precio de venta</dt>
+            <dd th:text="${producto.precioVenta != null} ? ${#numbers.formatDecimal(producto.precioVenta, 1, 'POINT', 2, 'COMMA')} : '—'">-</dd>
+            <dt>Descripcion</dt><dd th:text="${producto.descripcion} ?: '—'">-</dd>
+        </dl>
+    </div>
+
+    <h2>Historial de movimientos</h2>
+    <p class="vacio" th:if="${movimientos.isEmpty()}">
+        Este producto todavia no tiene entradas ni salidas.
+    </p>
+    <table th:unless="${movimientos.isEmpty()}">
+        <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Tipo</th>
+            <th class="num">Cantidad</th>
+            <th class="num">Stock resultante</th>
+            <th>Motivo</th>
+            <th>Responsable</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="m : ${movimientos}">
+            <td th:text="${#temporals.format(m.fecha, 'dd/MM/yyyy HH:mm')}">fecha</td>
+            <td>
+                <span class="etiqueta"
+                      th:classappend="${m.tipo.name() == 'ENTRADA'} ? 'etiqueta-entrada' : 'etiqueta-salida'"
+                      th:text="${m.tipo.etiqueta}">Tipo</span>
+            </td>
+            <td class="num" th:text="${m.cantidad}">0</td>
+            <td class="num" th:text="${m.stockResultante}">0</td>
+            <td th:text="${m.motivo} ?: '—'">-</td>
+            <td th:text="${m.responsable} ?: '—'">-</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <p style="margin-top:20px">
+        <a th:href="@{/productos}">← Volver al listado</a>
+    </p>
+</section>
+</body>
+</html>

@@ -39,7 +39,7 @@
         <tbody>
         <tr th:each="p : ${productos}">
             <td class="mono" th:text="${p.codigoQr}">QR</td>
-            <td th:text="${p.nombre}">Nombre</td>
+            <td><a th:href="@{/productos/{id}(id=${p.id})}" th:text="${p.nombre}">Nombre</a></td>
             <td th:text="${p.categoria.etiqueta}">Categoria</td>
             <td th:text="${p.marca}">-</td>
             <td th:text="${p.ubicacion}">-</td>

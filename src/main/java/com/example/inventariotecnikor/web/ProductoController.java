@@ -3,6 +3,7 @@ package com.example.inventariotecnikor.web;
 import com.example.inventariotecnikor.exception.CodigoQrDuplicadoException;
 import com.example.inventariotecnikor.model.Categoria;
 import com.example.inventariotecnikor.model.Producto;
+import com.example.inventariotecnikor.service.MovimientoService;
 import com.example.inventariotecnikor.service.ProductoService;
 import com.example.inventariotecnikor.web.form.ProductoForm;
 import jakarta.validation.Valid;
@@ -33,9 +34,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class ProductoController {
 
     private final ProductoService productoService;
+    private final MovimientoService movimientoService;
 
-    public ProductoController(ProductoService productoService) {
+    public ProductoController(ProductoService productoService,
+                             MovimientoService movimientoService) {
         this.productoService = productoService;
+        this.movimientoService = movimientoService;
     }
 
     // ------------------------------------------------------------------
@@ -50,15 +54,29 @@ public class ProductoController {
     }
 
     // ------------------------------------------------------------------
+    //  Ficha / detalle de un producto (con su historial de movimientos)
+    // ------------------------------------------------------------------
+
+    @GetMapping("/{id}")
+    public String detalle(@PathVariable Long id, Model model) {
+        Producto p = productoService.obtenerPorId(id); // 404 si no existe
+        model.addAttribute("producto", p);
+        model.addAttribute("movimientos", movimientoService.historialDe(id));
+        return "productos/detalle";
+    }
+
+    // ------------------------------------------------------------------
     //  Alta
     // ------------------------------------------------------------------
 
     @GetMapping("/nuevo")
-    public String formNuevo(Model model) {
+    public String formNuevo(@RequestParam(required = false) String codigoQr, Model model) {
         // Si venimos de un POST con errores, el "form" ya esta en el model;
         // solo lo creamos vacio la primera vez.
         if (!model.containsAttribute("form")) {
-            model.addAttribute("form", new ProductoForm());
+            ProductoForm form = new ProductoForm();
+            form.setCodigoQr(codigoQr); // pre-rellena si venimos de un escaneo sin resultado
+            model.addAttribute("form", form);
         }
         prepararCombosYModo(model, false, null);
         return "productos/form";

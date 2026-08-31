@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: main(~{::title}, ~{::section})}">
+<head>
+    <title th:text="(${form.tipo.name() == 'ENTRADA'} ? 'Registrar entrada' : 'Registrar salida') + ' · ' + ${producto.nombre}">Movimiento</title>
+</head>
+<body>
+<section>
+    <h1 th:text="${form.tipo.name() == 'ENTRADA'} ? 'Registrar entrada' : 'Registrar salida'">Movimiento</h1>
+
+    <p class="movimiento-producto">
+        <strong th:text="${producto.nombre}">Producto</strong>
+        · <span class="mono" th:text="${producto.codigoQr}">QR</span>
+        · stock actual: <strong th:text="${producto.stockActual}">0</strong>
+    </p>
+
+    <form class="formulario" method="post" th:object="${form}"
+          th:action="@{/productos/{id}/movimientos(id=${producto.id})}">
+
+        <!-- El tipo llega decidido desde el boton de la ficha; va oculto -->
+        <input type="hidden" th:field="*{tipo}">
+
+        <div class="campo">
+            <label for="cantidad">Cantidad *</label>
+            <input type="number" id="cantidad" min="1" th:field="*{cantidad}" autofocus>
+            <span class="error" th:if="${#fields.hasErrors('cantidad')}" th:errors="*{cantidad}"></span>
+        </div>
+
+        <div class="campo">
+            <label for="motivo">Motivo</label>
+            <input type="text" id="motivo" th:field="*{motivo}"
+                   placeholder="Ej. compra proveedor / venta factura 123 / ajuste conteo">
+            <span class="error" th:if="${#fields.hasErrors('motivo')}" th:errors="*{motivo}"></span>
+        </div>
+
+        <div class="campo">
+            <label for="responsable">Responsable</label>
+            <input type="text" id="responsable" th:field="*{responsable}"
+                   placeholder="Quien registra el movimiento">
+            <span class="error" th:if="${#fields.hasErrors('responsable')}" th:errors="*{responsable}"></span>
+        </div>
+
+        <div class="acciones-form">
+            <button type="submit" class="boton"
+                    th:classappend="${form.tipo.name() == 'ENTRADA'} ? 'boton-entrada' : 'boton-salida'"
+                    th:text="${form.tipo.name() == 'ENTRADA'} ? 'Registrar entrada' : 'Registrar salida'">
+                Registrar
+            </button>
+            <a class="boton-secundario" th:href="@{/productos/{id}(id=${producto.id})}">Cancelar</a>
+        </div>
+    </form>
+</section>
+</body>
+</html>

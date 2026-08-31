@@ -36,12 +36,12 @@
         </thead>
         <tbody>
         <tr th:each="p : ${stockBajo}">
-            <td th:text="${p.nombre}">Nombre</td>
+            <td><a th:href="@{/productos/{id}(id=${p.id})}" th:text="${p.nombre}">Nombre</a></td>
             <td th:text="${p.categoria.etiqueta}">Categoria</td>
             <td th:text="${p.ubicacion}">-</td>
             <td class="num stock-bajo" th:text="${p.stockActual}">0</td>
             <td class="num" th:text="${p.stockMinimo}">0</td>
-            <td><a class="boton-mini" th:href="@{/productos/{id}/editar(id=${p.id})}">Ver</a></td>
+            <td><a class="boton-mini" th:href="@{/productos/{id}(id=${p.id})}">Ver ficha</a></td>
         </tr>
         </tbody>
     </table>

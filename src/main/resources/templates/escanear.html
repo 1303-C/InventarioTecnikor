@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: main(~{::title}, ~{::section})}">
+<head>
+    <title>Escanear QR · Inventario Tecnikor</title>
+</head>
+<body>
+<section>
+    <h1>Escanear codigo QR</h1>
+
+    <div class="escaner">
+        <form method="get" th:action="@{/escanear}" class="escaner-form">
+            <label for="codigo">Escanea el codigo con el lector, o escribelo y pulsa Enter</label>
+            <input type="text" id="codigo" name="codigo" autofocus autocomplete="off"
+                   placeholder="Codigo QR del producto...">
+            <button type="submit" class="boton">Buscar</button>
+        </form>
+
+        <!-- Solo aparece si se busco un codigo que no existe -->
+        <div th:if="${codigoNoEncontrado}" class="alerta alerta-error escaner-aviso">
+            <p>
+                No hay ningun producto con el codigo
+                <strong th:text="${codigoNoEncontrado}">XXX</strong>.
+            </p>
+            <a class="boton"
+               th:href="@{/productos/nuevo(codigoQr=${codigoNoEncontrado})}">
+                Crear producto con este codigo
+            </a>
+        </div>
+    </div>
+</section>
+</body>
+</html>
