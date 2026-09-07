@@ -397,6 +397,20 @@ input[readonly] { background: #f0f2f5; color: var(--color-texto-suave); }
 }
 .movimiento-producto strong { color: var(--color-texto); }
 
+/* ---------- QR en la ficha ---------- */
+.qr-ficha {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 8px;
+}
+.qr-ficha img {
+    border: 1px solid var(--color-borde);
+    border-radius: 4px;
+    background: #fff;
+}
+
 @media (max-width: 720px) {
     .fila-2, .fila-3 { grid-template-columns: 1fr; }
     .topbar { flex-wrap: wrap; padding: 12px 16px; gap: 12px; }

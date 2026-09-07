@@ -59,6 +59,27 @@
             <artifactId>hibernate-community-dialects</artifactId>
         </dependency>
 
+        <!-- ZXing: genera la imagen del codigo QR a partir del texto.
+             No lo gestiona el BOM de Spring Boot, por eso lleva version. -->
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>3.5.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+            <version>3.5.3</version>
+            <exclusions>
+                <!-- Solo hace falta para formatos raros (TIFF, JBIG2...).
+                     Nosotros escribimos PNG con el ImageIO del propio JDK. -->
+                <exclusion>
+                    <groupId>com.github.jai-imageio</groupId>
+                    <artifactId>jai-imageio-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa-test</artifactId>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: main(~{::title}, ~{::section})}">
+<head>
+    <title>Etiquetas · Inventario Tecnikor</title>
+</head>
+<body>
+<section>
+    <h1>Imprimir etiquetas</h1>
+    <p class="ayuda">
+        Marca los productos, indica cuantas etiquetas de cada uno y el tamano en milimetros.
+        Se abrira una pestana nueva con las etiquetas y el dialogo de impresion.
+    </p>
+
+    <form method="get" th:action="@{/etiquetas/imprimir}" target="_blank">
+
+        <div class="fila-3" style="max-width:520px; margin-bottom:16px">
+            <div class="campo">
+                <label for="copias">Etiquetas por producto</label>
+                <input type="number" id="copias" name="copias" value="1" min="1">
+            </div>
+            <div class="campo">
+                <label for="ancho">Ancho (mm)</label>
+                <input type="number" id="ancho" name="ancho" value="50" min="10">
+            </div>
+            <div class="campo">
+                <label for="alto">Alto (mm)</label>
+                <input type="number" id="alto" name="alto" value="30" min="10">
+            </div>
+        </div>
+
+        <p class="vacio" th:if="${productos.isEmpty()}">No hay productos activos.</p>
+
+        <table th:unless="${productos.isEmpty()}">
+            <thead>
+            <tr>
+                <th style="width:36px"><input type="checkbox" id="todos" title="Seleccionar todos"></th>
+                <th>Codigo QR</th>
+                <th>Nombre</th>
+                <th>Categoria</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="p : ${productos}">
+                <td><input type="checkbox" name="ids" th:value="${p.id}" class="chk-etiqueta"></td>
+                <td class="mono" th:text="${p.codigoQr}">QR</td>
+                <td th:text="${p.nombre}">Nombre</td>
+                <td th:text="${p.categoria.etiqueta}">Categoria</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="acciones-form" th:unless="${productos.isEmpty()}">
+            <button type="submit" class="boton">Imprimir etiquetas</button>
+        </div>
+    </form>
+
+    <script>
+        document.getElementById('todos')?.addEventListener('change', function (e) {
+            document.querySelectorAll('.chk-etiqueta').forEach(c => c.checked = e.target.checked);
+        });
+    </script>
+</section>
+</body>
+</html>

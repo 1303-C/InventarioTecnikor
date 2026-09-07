@@ -36,7 +36,17 @@
 
         <!-- Ficha de datos -->
         <dl class="detalle-datos">
-            <dt>Codigo QR</dt><dd class="mono" th:text="${producto.codigoQr}">QR</dd>
+            <dt>Codigo QR</dt>
+            <dd>
+                <span class="mono" th:text="${producto.codigoQr}">QR</span>
+                <div class="qr-ficha">
+                    <img th:src="@{/productos/{id}/qr.png(id=${producto.id})}" alt="QR" width="120" height="120">
+                    <a class="boton-mini"
+                       th:href="@{/etiquetas/imprimir(ids=${producto.id},copias=1)}" target="_blank">
+                        Imprimir etiqueta
+                    </a>
+                </div>
+            </dd>
             <dt>Categoria</dt><dd th:text="${producto.categoria.etiqueta}">-</dd>
             <dt>Marca</dt><dd th:text="${producto.marca} ?: '—'">-</dd>
             <dt>Numero de parte</dt><dd th:text="${producto.numeroParte} ?: '—'">-</dd>
