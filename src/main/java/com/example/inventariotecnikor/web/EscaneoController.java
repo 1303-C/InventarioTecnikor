@@ -24,14 +24,21 @@ import java.util.Optional;
  *        - existe   -> redirect a su ficha /productos/{id}
  *        - no existe -> vuelve al input con un aviso y un enlace para
  *                       crear el producto con ese codigo ya puesto
+ *
+ * Ademas, si el codigo no aparece tal cual, se reintenta la busqueda
+ * corrigiendo el desajuste de distribucion de teclado del lector
+ * (ver {@link CorrectorTeclado}).
  */
 @Controller
 public class EscaneoController {
 
     private final ProductoService productoService;
+    private final CorrectorTeclado correctorTeclado;
 
-    public EscaneoController(ProductoService productoService) {
+    public EscaneoController(ProductoService productoService,
+                            CorrectorTeclado correctorTeclado) {
         this.productoService = productoService;
+        this.correctorTeclado = correctorTeclado;
     }
 
     @GetMapping("/escanear")
@@ -41,13 +48,27 @@ public class EscaneoController {
         }
 
         String limpio = codigo.trim();
+
+        // 1) Busqueda normal, con el codigo tal cual llego.
         Optional<Producto> encontrado = productoService.buscarPorQrOpcional(limpio);
+
+        // 2) Fallback: lector en distribucion US con Windows en espanol.
+        //    Se reintenta deshaciendo ese cambio (' -> -, - -> /, ...).
+        //    Solo entra si la correccion cambia algo y solo se usa si
+        //    encuentra producto, asi nunca devuelve uno equivocado.
+        if (encontrado.isEmpty()) {
+            String reinterpretado = correctorTeclado.comoUs(limpio);
+            if (!reinterpretado.equals(limpio)) {
+                encontrado = productoService.buscarPorQrOpcional(reinterpretado);
+            }
+        }
 
         if (encontrado.isPresent()) {
             return "redirect:/productos/" + encontrado.get().getId();
         }
 
-        // No hay ningun producto con ese codigo
+        // No hay ningun producto con ese codigo (ni corrigiendo la distribucion).
+        // Se muestra el codigo tal cual se escaneo, que es lo que el usuario ve.
         model.addAttribute("codigoNoEncontrado", limpio);
         return "escanear";
     }

@@ -35,11 +35,14 @@ public class ProductoController {
 
     private final ProductoService productoService;
     private final MovimientoService movimientoService;
+    private final CorrectorTeclado correctorTeclado;
 
     public ProductoController(ProductoService productoService,
-                             MovimientoService movimientoService) {
+                             MovimientoService movimientoService,
+                             CorrectorTeclado correctorTeclado) {
         this.productoService = productoService;
         this.movimientoService = movimientoService;
+        this.correctorTeclado = correctorTeclado;
     }
 
     // ------------------------------------------------------------------
@@ -48,7 +51,24 @@ public class ProductoController {
 
     @GetMapping
     public String lista(@RequestParam(required = false) String q, Model model) {
-        model.addAttribute("productos", productoService.buscar(q));
+        var resultados = productoService.buscar(q);
+
+        // Se puede escanear directamente en el buscador. Si el lector esta
+        // en distribucion US y Windows en espanol, el codigo llega con los
+        // simbolos cambiados (- por /, ' por -, ...). Si la busqueda tal
+        // cual no da nada, se reintenta corrigiendo esa distribucion.
+        if (resultados.isEmpty() && q != null && !q.isBlank()) {
+            String corregido = correctorTeclado.comoUs(q.trim());
+            if (!corregido.equals(q.trim())) {
+                var reintento = productoService.buscar(corregido);
+                if (!reintento.isEmpty()) {
+                    resultados = reintento;
+                    q = corregido; // el buscador muestra el codigo ya corregido
+                }
+            }
+        }
+
+        model.addAttribute("productos", resultados);
         model.addAttribute("q", q);
         return "productos/lista";
     }

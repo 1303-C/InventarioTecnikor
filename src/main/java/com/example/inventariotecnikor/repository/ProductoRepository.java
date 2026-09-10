@@ -36,7 +36,8 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
     /**
      * Buscador de texto libre para la pantalla de busqueda: coincidencia
-     * parcial e ignorando mayusculas en nombre, marca o numero de parte.
+     * parcial e ignorando mayusculas en nombre, marca, numero de parte o
+     * codigo QR (para poder escanear directamente en el buscador).
      * Con derived query el nombre del metodo seria kilometrico y con la
      * precedencia de AND/OR mal puesta, asi que se hace con JPQL.
      * "lower(...) like %:q%" es el equivalente a un LIKE case-insensitive.
@@ -47,6 +48,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
                   lower(p.nombre)      like lower(concat('%', :texto, '%'))
                or lower(p.marca)       like lower(concat('%', :texto, '%'))
                or lower(p.numeroParte) like lower(concat('%', :texto, '%'))
+               or lower(p.codigoQr)    like lower(concat('%', :texto, '%'))
             )
             order by p.nombre asc
             """)
