@@ -2,16 +2,22 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout :: main(~{::title}, ~{::section})}">
 <head>
-    <title th:text="(${form.tipo.name() == 'ENTRADA'} ? 'Registrar entrada' : 'Registrar salida') + ' · ' + ${producto.nombre}">Movimiento</title>
+    <title th:with="t=${form.tipo.name()}"
+           th:text="(${t == 'ENTRADA'} ? 'Registrar entrada' : (${t == 'AJUSTE'} ? 'Ajuste por conteo' : 'Registrar salida')) + ' · ' + ${producto.nombre}">Movimiento</title>
 </head>
 <body>
-<section>
-    <h1 th:text="${form.tipo.name() == 'ENTRADA'} ? 'Registrar entrada' : 'Registrar salida'">Movimiento</h1>
+<section th:with="esEntrada=${form.tipo.name() == 'ENTRADA'}, esAjuste=${form.tipo.name() == 'AJUSTE'}">
+    <h1 th:text="${esAjuste} ? 'Ajuste por conteo' : (${esEntrada} ? 'Registrar entrada' : 'Registrar salida')">Movimiento</h1>
 
     <p class="movimiento-producto">
         <strong th:text="${producto.nombre}">Producto</strong>
         · <span class="mono" th:text="${producto.codigoQr}">QR</span>
         · stock actual: <strong th:text="${producto.stockActual}">0</strong>
+    </p>
+
+    <p class="ayuda" th:if="${esAjuste}">
+        Escribe cuantas unidades hay <strong>realmente</strong> en la estanteria.
+        El sistema calcula la diferencia y corrige el stock.
     </p>
 
     <form class="formulario" method="post" th:object="${form}"
@@ -21,29 +27,29 @@
         <input type="hidden" th:field="*{tipo}">
 
         <div class="campo">
-            <label for="cantidad">Cantidad *</label>
-            <input type="number" id="cantidad" min="1" th:field="*{cantidad}" autofocus>
+            <label for="cantidad" th:text="${esAjuste} ? 'Unidades contadas (stock real) *' : 'Cantidad *'">Cantidad *</label>
+            <input type="number" id="cantidad" th:min="${esAjuste} ? 0 : 1" th:field="*{cantidad}" autofocus>
             <span class="error" th:if="${#fields.hasErrors('cantidad')}" th:errors="*{cantidad}"></span>
         </div>
 
         <div class="campo">
             <label for="motivo">Motivo</label>
             <input type="text" id="motivo" th:field="*{motivo}"
-                   placeholder="Ej. compra proveedor / venta factura 123 / ajuste conteo">
+                   th:placeholder="${esAjuste} ? 'Ej. roturas / mermas / error de registro' : 'Ej. compra proveedor / venta factura 123'">
             <span class="error" th:if="${#fields.hasErrors('motivo')}" th:errors="*{motivo}"></span>
         </div>
 
         <div class="campo">
             <label for="responsable">Responsable</label>
             <input type="text" id="responsable" th:field="*{responsable}"
-                   placeholder="Quien registra el movimiento">
+                   th:placeholder="${esAjuste} ? 'Quien hizo el conteo' : 'Quien registra el movimiento'">
             <span class="error" th:if="${#fields.hasErrors('responsable')}" th:errors="*{responsable}"></span>
         </div>
 
         <div class="acciones-form">
             <button type="submit" class="boton"
-                    th:classappend="${form.tipo.name() == 'ENTRADA'} ? 'boton-entrada' : 'boton-salida'"
-                    th:text="${form.tipo.name() == 'ENTRADA'} ? 'Registrar entrada' : 'Registrar salida'">
+                    th:classappend="${esAjuste} ? 'boton-ajuste' : (${esEntrada} ? 'boton-entrada' : 'boton-salida')"
+                    th:text="${esAjuste} ? 'Guardar conteo' : (${esEntrada} ? 'Registrar entrada' : 'Registrar salida')">
                 Registrar
             </button>
             <a class="boton-secundario" th:href="@{/productos/{id}(id=${producto.id})}">Cancelar</a>

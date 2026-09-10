@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Registro de entradas y salidas de stock.
@@ -55,6 +56,11 @@ public class MovimientoService {
                                           String motivo,
                                           String responsable) {
 
+        if (tipo == TipoMovimiento.AJUSTE) {
+            throw new IllegalArgumentException(
+                    "Los ajustes por conteo se registran con ajustarA(...), no con registrar(...).");
+        }
+
         if (cantidad <= 0) {
             throw new IllegalArgumentException("La cantidad debe ser mayor que cero.");
         }
@@ -88,6 +94,61 @@ public class MovimientoService {
     @Transactional
     public MovimientoInventario registrarSalida(Long productoId, int cantidad, String motivo, String responsable) {
         return registrar(productoId, TipoMovimiento.SALIDA, cantidad, motivo, responsable);
+    }
+
+    /**
+     * Ajuste por conteo fisico: se indica cuantas unidades hay REALMENTE en
+     * la estanteria y el sistema calcula la diferencia, corrige el stock y
+     * deja un movimiento de tipo AJUSTE con rastro del saldo anterior en el
+     * motivo ("Conteo: 8 -> 5 (-3)").
+     *
+     * A diferencia de una ENTRADA/SALIDA, aqui:
+     *  - cantidadReal es el TOTAL contado (>= 0), no un incremento.
+     *  - un ajuste a la baja NUNCA lanza StockInsuficiente: el conteo manda.
+     *  - la "cantidad" que se guarda en el movimiento es |diferencia|, y el
+     *    sentido (subio/bajo) queda escrito en el motivo.
+     *
+     * @param cantidadReal unidades contadas, >= 0
+     * @param motivo       nota opcional del operario (p. ej. "roturas")
+     * @param responsable  quien hizo el conteo
+     * @return el movimiento generado, o Optional.empty() si el conteo ya
+     *         coincidia con el stock actual (no habia nada que corregir)
+     */
+    @Transactional
+    public Optional<MovimientoInventario> ajustarA(Long productoId,
+                                                   int cantidadReal,
+                                                   String motivo,
+                                                   String responsable) {
+
+        if (cantidadReal < 0) {
+            throw new IllegalArgumentException("La cantidad contada no puede ser negativa.");
+        }
+
+        Producto producto = productoRepository.findById(productoId)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "No existe el producto con id: " + productoId));
+
+        int anterior = producto.getStockActual();
+        if (cantidadReal == anterior) {
+            return Optional.empty(); // el conteo cuadra: no se registra nada
+        }
+
+        int diferencia = cantidadReal - anterior;
+        producto.setStockActual(cantidadReal); // dirty checking -> UPDATE al confirmar
+
+        String detalle = "Conteo: " + anterior + " -> " + cantidadReal
+                + " (" + (diferencia > 0 ? "+" : "") + diferencia + ")";
+        String motivoFinal = (motivo == null || motivo.isBlank())
+                ? detalle
+                : detalle + " - " + motivo.trim();
+        if (motivoFinal.length() > 200) {
+            motivoFinal = motivoFinal.substring(0, 200);
+        }
+
+        MovimientoInventario movimiento = new MovimientoInventario(
+                producto, TipoMovimiento.AJUSTE, Math.abs(diferencia), cantidadReal,
+                motivoFinal, responsable);
+        return Optional.of(movimientoRepository.save(movimiento));
     }
 
     // ------------------------------------------------------------------

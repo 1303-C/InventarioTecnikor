@@ -19,11 +19,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
- * Registro de entradas y salidas de stock de un producto concreto.
+ * Registro de entradas, salidas y ajustes por conteo de un producto concreto.
  *
  * Las rutas cuelgan de un producto:
  *   GET  /productos/{productoId}/movimientos/nuevo?tipo=ENTRADA  -> formulario
  *   POST /productos/{productoId}/movimientos                     -> lo guarda
+ *
+ * tipo puede ser ENTRADA, SALIDA o AJUSTE. Para AJUSTE, "cantidad" es el
+ * total contado fisicamente y el servicio calcula solo la diferencia.
  *
  * El historial se ve en la ficha del producto (ProductoController#detalle).
  */
@@ -50,6 +53,11 @@ public class MovimientoController {
         if (!model.containsAttribute("form")) {
             MovimientoForm form = new MovimientoForm();
             form.setTipo(tipo);
+            // En un ajuste se parte del stock actual: el operario solo cambia
+            // el numero si el conteo no cuadra.
+            if (tipo == TipoMovimiento.AJUSTE) {
+                form.setCantidad(producto.getStockActual());
+            }
             model.addAttribute("form", form);
         }
         model.addAttribute("producto", producto);
@@ -65,18 +73,37 @@ public class MovimientoController {
 
         Producto producto = productoService.obtenerPorId(productoId);
 
+        // En un AJUSTE, cantidad = total contado y puede ser 0. En una
+        // ENTRADA/SALIDA tiene que ser > 0 (el 0 lo deja pasar @PositiveOrZero).
+        if (form.getTipo() != TipoMovimiento.AJUSTE
+                && form.getCantidad() != null && form.getCantidad() == 0) {
+            errores.rejectValue("cantidad", "positivo", "La cantidad debe ser mayor que cero");
+        }
+
         if (errores.hasErrors()) {
             model.addAttribute("producto", producto);
             return "movimientos/form";
         }
 
         try {
-            movimientoService.registrar(
-                    productoId,
-                    form.getTipo(),
-                    form.getCantidad(),
-                    form.getMotivo(),
-                    form.getResponsable());
+            if (form.getTipo() == TipoMovimiento.AJUSTE) {
+                var ajuste = movimientoService.ajustarA(
+                        productoId, form.getCantidad(), form.getMotivo(), form.getResponsable());
+                flash.addFlashAttribute("mensajeExito", ajuste
+                        .map(m -> "Stock ajustado a " + m.getStockResultante() + " unidad(es).")
+                        .orElse("El conteo coincide con el stock actual ("
+                                + producto.getStockActual() + "). No se registro ningun ajuste."));
+            } else {
+                movimientoService.registrar(
+                        productoId,
+                        form.getTipo(),
+                        form.getCantidad(),
+                        form.getMotivo(),
+                        form.getResponsable());
+                String verbo = form.getTipo() == TipoMovimiento.ENTRADA ? "Entrada" : "Salida";
+                flash.addFlashAttribute("mensajeExito",
+                        verbo + " de " + form.getCantidad() + " unidad(es) registrada.");
+            }
         } catch (StockInsuficienteException ex) {
             // Regla de negocio: la mostramos junto al campo cantidad en vez
             // de mandar al usuario a la pagina de error generica.
@@ -85,9 +112,6 @@ public class MovimientoController {
             return "movimientos/form";
         }
 
-        String verbo = form.getTipo() == TipoMovimiento.ENTRADA ? "Entrada" : "Salida";
-        flash.addFlashAttribute("mensajeExito",
-                verbo + " de " + form.getCantidad() + " unidad(es) registrada.");
         return "redirect:/productos/" + productoId;
     }
 }

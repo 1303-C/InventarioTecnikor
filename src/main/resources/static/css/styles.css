@@ -171,6 +171,7 @@ tbody tr:hover { background: #f5f8fb; }
 }
 .etiqueta-entrada { background: var(--color-exito-fondo); color: var(--color-exito-texto); }
 .etiqueta-salida  { background: var(--color-error-fondo); color: var(--color-error-texto); }
+.etiqueta-ajuste  { background: #eef1f4; color: var(--tk-navy); }
 
 /* ---------- Botones ---------- */
 .boton, .boton-secundario, .boton-mini {
@@ -294,6 +295,8 @@ input[readonly] { background: #f0f2f5; color: var(--color-texto-suave); }
 .boton-entrada:hover { background: #17692f; }
 .boton-salida { background: var(--color-alerta); }
 .boton-salida:hover { background: #a5302a; }
+.boton-ajuste { background: var(--tk-navy); }
+.boton-ajuste:hover { background: var(--tk-blue-oscuro); }
 
 /* ---------- Pantalla de escaneo ---------- */
 .escaner {

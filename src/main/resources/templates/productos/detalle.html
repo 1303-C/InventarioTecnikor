@@ -31,6 +31,10 @@
                    th:href="@{/productos/{id}/movimientos/nuevo(id=${producto.id},tipo='SALIDA')}">
                     − Registrar salida
                 </a>
+                <a class="boton boton-ajuste"
+                   th:href="@{/productos/{id}/movimientos/nuevo(id=${producto.id},tipo='AJUSTE')}">
+                    ✎ Ajustar por conteo
+                </a>
             </div>
         </div>
 
@@ -78,7 +82,7 @@
             <td th:text="${#temporals.format(m.fecha, 'dd/MM/yyyy HH:mm')}">fecha</td>
             <td>
                 <span class="etiqueta"
-                      th:classappend="${m.tipo.name() == 'ENTRADA'} ? 'etiqueta-entrada' : 'etiqueta-salida'"
+                      th:classappend="${m.tipo.name() == 'ENTRADA'} ? 'etiqueta-entrada' : (${m.tipo.name() == 'AJUSTE'} ? 'etiqueta-ajuste' : 'etiqueta-salida')"
                       th:text="${m.tipo.etiqueta}">Tipo</span>
             </td>
             <td class="num" th:text="${m.cantidad}">0</td>

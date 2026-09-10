@@ -49,6 +49,11 @@ public class MovimientoInventario {
     @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;
 
+    // OJO: Hibernate genera un CHECK (tipo in ('ENTRADA','SALIDA','AJUSTE'))
+    // con la lista de constantes actual. En una BD nueva se crea bien, pero
+    // ddl-auto=update NO actualiza un CHECK ya existente: si anades un valor
+    // nuevo al enum, hay que migrar a mano la BD que ya estaba creada
+    // (reconstruir la tabla). Ver docs/migraciones.
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
     private TipoMovimiento tipo;
