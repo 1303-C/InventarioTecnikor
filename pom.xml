@@ -66,6 +66,15 @@
             <artifactId>core</artifactId>
             <version>3.5.3</version>
         </dependency>
+
+        <!-- escpos-coffee: construye los bytes ESC/POS del ticket (texto,
+             corte de papel, pulso para abrir el cajon monedero). Java puro,
+             sin librerias nativas. -->
+        <dependency>
+            <groupId>com.github.anastaciocintra</groupId>
+            <artifactId>escpos-coffee</artifactId>
+            <version>4.1.0</version>
+        </dependency>
         <dependency>
             <groupId>com.google.zxing</groupId>
             <artifactId>javase</artifactId>

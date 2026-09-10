@@ -3,6 +3,7 @@ package com.example.inventariotecnikor.web;
 import com.example.inventariotecnikor.exception.CodigoQrDuplicadoException;
 import com.example.inventariotecnikor.exception.RecursoNoEncontradoException;
 import com.example.inventariotecnikor.exception.StockInsuficienteException;
+import com.example.inventariotecnikor.exception.TicketException;
 import org.springframework.http.HttpStatus;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -38,6 +39,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
             StockInsuficienteException.class,
             CodigoQrDuplicadoException.class,
+            TicketException.class,
             IllegalArgumentException.class
     })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
