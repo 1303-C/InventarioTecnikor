@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: main(~{::title}, ~{::section})}">
+<head>
+    <title>Vender · Inventario Tecnikor</title>
+</head>
+<body>
+<section>
+    <div class="fila-titulo">
+        <h1>Vender</h1>
+        <a class="boton-secundario" th:href="@{/ventas}">Historial de ventas</a>
+    </div>
+
+    <form class="pos-escaneo" method="post" th:action="@{/ventas/nueva/lineas}">
+        <input type="text" name="codigo" autocomplete="off" autofocus
+               placeholder="Escanea el codigo del producto o escribelo y pulsa Enter">
+        <button type="submit" class="boton">Agregar</button>
+    </form>
+
+    <div class="pos">
+        <!-- Carrito -->
+        <div class="pos-carrito">
+            <p class="vacio" th:if="${carrito.vacio}">
+                Escanea un producto para empezar la venta.
+            </p>
+
+            <table th:unless="${carrito.vacio}">
+                <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th class="num">Precio</th>
+                    <th class="num">Cantidad</th>
+                    <th class="num">Importe</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="i : ${carrito.items}">
+                    <td>
+                        <span th:text="${i.descripcion}">Producto</span><br>
+                        <span class="mono" style="font-size:.8rem" th:text="${i.codigoQr}">QR</span>
+                    </td>
+                    <td class="num"
+                        th:text="${#numbers.formatDecimal(i.precioUnitario, 1, 'POINT', 0, 'COMMA')}">0</td>
+                    <td class="num">
+                        <form method="post" class="pos-cantidad"
+                              th:action="@{/ventas/nueva/lineas/{id}(id=${i.productoId})}">
+                            <input type="number" name="cantidad" min="0" th:value="${i.cantidad}">
+                            <button type="submit" class="boton-mini">OK</button>
+                        </form>
+                    </td>
+                    <td class="num"
+                        th:text="${#numbers.formatDecimal(i.importe, 1, 'POINT', 0, 'COMMA')}">0</td>
+                    <td>
+                        <form method="post"
+                              th:action="@{/ventas/nueva/lineas/{id}(id=${i.productoId})}">
+                            <input type="hidden" name="cantidad" value="0">
+                            <button type="submit" class="boton-mini boton-peligro">Quitar</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div class="pos-carrito-pie" th:unless="${carrito.vacio}">
+                <span th:text="${carrito.totalUnidades} + ' unidad(es)'">0 unidades</span>
+                <form method="post" th:action="@{/ventas/nueva/vaciar}"
+                      onsubmit="return confirm('¿Vaciar el carrito?');">
+                    <button type="submit" class="boton-mini boton-peligro">Vaciar</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Cobro -->
+        <div class="pos-cobro" th:attr="data-total=${carrito.total}">
+            <div class="pos-total">
+                <span>Total</span>
+                <strong th:text="${#numbers.formatDecimal(carrito.total, 1, 'POINT', 0, 'COMMA')}">0</strong>
+            </div>
+
+            <form class="formulario" method="post" th:action="@{/ventas}" th:object="${cobro}">
+                <div class="campo">
+                    <label for="formaPago">Forma de pago</label>
+                    <select id="formaPago" th:field="*{formaPago}">
+                        <option th:each="fp : ${formasPago}" th:value="${fp}" th:text="${fp.etiqueta}">Efectivo</option>
+                    </select>
+                </div>
+
+                <div class="campo" id="campoRecibido">
+                    <label for="montoRecibido">Monto recibido</label>
+                    <input type="number" id="montoRecibido" min="0" step="1" th:field="*{montoRecibido}">
+                    <span class="error" th:if="${#fields.hasErrors('montoRecibido')}" th:errors="*{montoRecibido}"></span>
+                    <p class="ayuda" id="cambioLinea">Cambio: <strong id="cambio">0</strong></p>
+                </div>
+
+                <div class="campo">
+                    <label for="responsable">Responsable</label>
+                    <input type="text" id="responsable" th:field="*{responsable}" placeholder="Quien cobra">
+                    <span class="error" th:if="${#fields.hasErrors('responsable')}" th:errors="*{responsable}"></span>
+                </div>
+
+                <details class="pos-cliente">
+                    <summary>Cliente (opcional)</summary>
+                    <div class="campo">
+                        <label for="clienteNombre">Nombre</label>
+                        <input type="text" id="clienteNombre" th:field="*{clienteNombre}">
+                        <span class="error" th:if="${#fields.hasErrors('clienteNombre')}" th:errors="*{clienteNombre}"></span>
+                    </div>
+                    <div class="campo">
+                        <label for="clienteDocumento">Documento</label>
+                        <input type="text" id="clienteDocumento" th:field="*{clienteDocumento}">
+                        <span class="error" th:if="${#fields.hasErrors('clienteDocumento')}" th:errors="*{clienteDocumento}"></span>
+                    </div>
+                </details>
+
+                <button type="submit" class="boton boton-entrada" th:disabled="${carrito.vacio}">
+                    Cobrar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script th:inline="none">
+        (function () {
+            var cobro = document.querySelector('.pos-cobro');
+            var total = parseFloat(cobro.getAttribute('data-total')) || 0;
+            var forma = document.getElementById('formaPago');
+            var campoRecibido = document.getElementById('campoRecibido');
+            var recibido = document.getElementById('montoRecibido');
+            var cambio = document.getElementById('cambio');
+
+            function esEfectivo() { return forma.value === 'EFECTIVO'; }
+
+            function refrescar() {
+                campoRecibido.style.display = esEfectivo() ? '' : 'none';
+                var r = parseFloat(recibido.value) || 0;
+                var c = r - total;
+                cambio.textContent = (c > 0 ? Math.round(c) : 0).toLocaleString('es-CO');
+            }
+
+            forma.addEventListener('change', refrescar);
+            recibido.addEventListener('input', refrescar);
+            refrescar();
+        })();
+    </script>
+</section>
+</body>
+</html>

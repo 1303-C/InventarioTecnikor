@@ -34,6 +34,8 @@
     </a>
     <nav class="menu">
         <a th:href="@{/}">Dashboard</a>
+        <a th:href="@{/ventas/nueva}">Vender</a>
+        <a th:href="@{/ventas}">Ventas</a>
         <a th:href="@{/escanear}">Escanear QR</a>
         <a th:href="@{/productos}">Productos</a>
         <a th:href="@{/etiquetas}">Etiquetas</a>
@@ -42,8 +44,9 @@
 </header>
 
 <main class="contenedor">
-    <!-- Mensaje de exito que llega por flash attribute tras un redirect -->
+    <!-- Mensajes que llegan por flash attribute tras un redirect -->
     <div class="alerta alerta-exito" th:if="${mensajeExito}" th:text="${mensajeExito}"></div>
+    <div class="alerta alerta-error" th:if="${mensajeError}" th:text="${mensajeError}"></div>
 
     <!-- Aqui se inyecta el <section> de la pagina concreta -->
     <div th:replace="${contenido}">Contenido de la pagina</div>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: main(~{::title}, ~{::section})}">
+<head>
+    <title th:text="'Venta #' + ${venta.numero} + ' · Inventario Tecnikor'">Venta</title>
+</head>
+<body>
+<section>
+    <div class="fila-titulo">
+        <h1 th:text="'Venta #' + ${venta.numero}">Venta</h1>
+        <a class="boton" th:href="@{/ventas/nueva}">Nueva venta</a>
+    </div>
+
+    <dl class="detalle-datos">
+        <dt>Fecha</dt>
+        <dd th:text="${#temporals.format(venta.fecha, 'dd/MM/yyyy HH:mm')}">-</dd>
+        <dt>Estado</dt>
+        <dd th:text="${venta.estado.etiqueta}">-</dd>
+        <dt>Forma de pago</dt>
+        <dd th:text="${venta.formaPago.etiqueta}">-</dd>
+        <dt>Responsable</dt>
+        <dd th:text="${venta.responsable} ?: '—'">-</dd>
+        <dt>Cliente</dt>
+        <dd th:text="${venta.clienteNombre} ?: '—'">-</dd>
+    </dl>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Producto</th>
+            <th class="num">Precio</th>
+            <th class="num">Cantidad</th>
+            <th class="num">Importe</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="l : ${venta.lineas}">
+            <td>
+                <span th:text="${l.descripcion}">Producto</span><br>
+                <span class="mono" style="font-size:.8rem" th:text="${l.codigoQr}">QR</span>
+            </td>
+            <td class="num" th:text="${#numbers.formatDecimal(l.precioUnitario, 1, 'POINT', 0, 'COMMA')}">0</td>
+            <td class="num" th:text="${l.cantidad}">0</td>
+            <td class="num" th:text="${#numbers.formatDecimal(l.importe, 1, 'POINT', 0, 'COMMA')}">0</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="pos-total" style="max-width:320px;margin-left:auto">
+        <span>Total</span>
+        <strong th:text="${#numbers.formatDecimal(venta.total, 1, 'POINT', 0, 'COMMA')}">0</strong>
+    </div>
+    <dl class="detalle-datos" th:if="${venta.formaPago.esEfectivo()}" style="max-width:320px;margin-left:auto">
+        <dt>Recibido</dt>
+        <dd th:text="${#numbers.formatDecimal(venta.montoRecibido, 1, 'POINT', 0, 'COMMA')}">0</dd>
+        <dt>Cambio</dt>
+        <dd th:text="${#numbers.formatDecimal(venta.cambio, 1, 'POINT', 0, 'COMMA')}">0</dd>
+    </dl>
+
+    <div class="acciones-form" style="margin-top:20px">
+        <form method="post" th:action="@{/ventas/{id}/reimprimir(id=${venta.id})}">
+            <button type="submit" class="boton-secundario">Reimprimir ticket</button>
+        </form>
+        <a th:href="@{/ventas}">← Historial de ventas</a>
+    </div>
+</section>
+</body>
+</html>
