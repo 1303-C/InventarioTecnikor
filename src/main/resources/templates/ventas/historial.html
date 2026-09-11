@@ -8,7 +8,10 @@
 <section>
     <div class="fila-titulo">
         <h1>Ventas</h1>
-        <a class="boton" th:href="@{/ventas/nueva}">Nueva venta</a>
+        <span>
+            <a class="boton-secundario" th:href="@{/ventas/cierre(fecha=${fecha})}">Cierre de caja</a>
+            <a class="boton" th:href="@{/ventas/nueva}">Nueva venta</a>
+        </span>
     </div>
 
     <form class="buscador" method="get" th:action="@{/ventas}">

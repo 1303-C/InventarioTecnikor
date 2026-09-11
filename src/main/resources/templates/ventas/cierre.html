@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: main(~{::title}, ~{::section})}">
+<head>
+    <title>Cierre de caja · Inventario Tecnikor</title>
+</head>
+<body>
+<section>
+    <div class="fila-titulo">
+        <h1>Cierre de caja</h1>
+        <a class="boton-secundario" th:href="@{/ventas(fecha=${cierre.fecha})}">Ver ventas del dia</a>
+    </div>
+
+    <form class="buscador" method="get" th:action="@{/ventas/cierre}">
+        <label for="fecha">Dia</label>
+        <input type="date" id="fecha" name="fecha" th:value="${cierre.fecha}">
+        <button type="submit">Ver</button>
+    </form>
+
+    <div class="tarjetas">
+        <div class="tarjeta">
+            <span class="tarjeta-numero" th:text="${cierre.cantidadVentas}">0</span>
+            <span class="tarjeta-etiqueta">Ventas del dia</span>
+        </div>
+        <div class="tarjeta">
+            <span class="tarjeta-numero"
+                  th:text="${#numbers.formatDecimal(cierre.total, 1, 'POINT', 0, 'COMMA')}">0</span>
+            <span class="tarjeta-etiqueta">Total vendido</span>
+        </div>
+        <div class="tarjeta tarjeta-alerta">
+            <span class="tarjeta-numero"
+                  th:text="${#numbers.formatDecimal(cierre.efectivo, 1, 'POINT', 0, 'COMMA')}">0</span>
+            <span class="tarjeta-etiqueta">Efectivo esperado en el cajon</span>
+        </div>
+    </div>
+
+    <h2>Por forma de pago</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Forma de pago</th>
+            <th class="num">Ventas</th>
+            <th class="num">Total</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="d : ${cierre.desglose}">
+            <td th:text="${d.formaPago.etiqueta}">-</td>
+            <td class="num" th:text="${d.cantidad}">0</td>
+            <td class="num" th:text="${#numbers.formatDecimal(d.total, 1, 'POINT', 0, 'COMMA')}">0</td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+            <th>Total</th>
+            <th class="num" th:text="${cierre.cantidadVentas}">0</th>
+            <th class="num" th:text="${#numbers.formatDecimal(cierre.total, 1, 'POINT', 0, 'COMMA')}">0</th>
+        </tr>
+        </tfoot>
+    </table>
+
+    <p class="ayuda">
+        El efectivo esperado no incluye la base con la que se abrio la caja.
+    </p>
+</section>
+</body>
+</html>

@@ -215,6 +215,15 @@ public class VentaController {
         return "ventas/historial";
     }
 
+    @GetMapping("/ventas/cierre")
+    public String cierre(@RequestParam(required = false)
+                         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
+                         Model model) {
+        LocalDate dia = fecha != null ? fecha : LocalDate.now();
+        model.addAttribute("cierre", ventaService.cierreDelDia(dia));
+        return "ventas/cierre";
+    }
+
     // ------------------------------------------------------------------
 
     /** Busca por codigo QR; si no aparece, reintenta corrigiendo la

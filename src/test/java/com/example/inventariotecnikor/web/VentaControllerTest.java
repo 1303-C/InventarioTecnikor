@@ -4,6 +4,7 @@ import com.example.inventariotecnikor.model.Categoria;
 import com.example.inventariotecnikor.model.FormaPago;
 import com.example.inventariotecnikor.model.Producto;
 import com.example.inventariotecnikor.model.Venta;
+import com.example.inventariotecnikor.service.CierreCaja;
 import com.example.inventariotecnikor.service.ProductoService;
 import com.example.inventariotecnikor.service.VentaService;
 import com.example.inventariotecnikor.service.ticket.TicketPrinter;
@@ -18,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -175,5 +177,20 @@ class VentaControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("ventas/historial"))
                 .andExpect(model().attributeExists("ventas", "fecha", "totalDia"));
+    }
+
+    @Test
+    void get_cierre_muestra_el_cierre_de_caja() throws Exception {
+        BigDecimal cero = new BigDecimal("0.00");
+        CierreCaja cierre = new CierreCaja(LocalDate.of(2026, 9, 10), 0, cero, cero, List.of(
+                new CierreCaja.PorFormaPago(FormaPago.EFECTIVO, 0, cero),
+                new CierreCaja.PorFormaPago(FormaPago.TARJETA, 0, cero),
+                new CierreCaja.PorFormaPago(FormaPago.TRANSFERENCIA, 0, cero)));
+        when(ventaService.cierreDelDia(any())).thenReturn(cierre);
+
+        mvc.perform(get("/ventas/cierre").param("fecha", "2026-09-10"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("ventas/cierre"))
+                .andExpect(model().attributeExists("cierre"));
     }
 }
