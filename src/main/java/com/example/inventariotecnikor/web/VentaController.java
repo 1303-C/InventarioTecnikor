@@ -36,11 +36,11 @@ import java.util.List;
  *   POST /ventas                       -> cobra: registra la Venta e imprime el ticket
  *   GET  /ventas/{id}                  -> detalle de una venta
  *   POST /ventas/{id}/reimprimir       -> vuelve a mandar el ticket
- *   GET  /ventas                       -> historial de un dia
+ *   GET  /ventas                       -> historial (rango de fechas, un dia por defecto)
  *
  * El carrito vive en {@link CarritoVenta} (sesion). La impresion del ticket
  * NO tumba la venta: si el papel no sale, la venta queda guardada y se
- * reimprime desde el detalle.
+ * reimprime desde el detalle. El cierre de caja vive en {@link CajaController}.
  */
 @Controller
 public class VentaController {
@@ -197,31 +197,31 @@ public class VentaController {
         return "redirect:/ventas/" + id;
     }
 
+    /** Historial de ventas de un rango de fechas (un solo dia si no se pasa "hasta"). */
     @GetMapping("/ventas")
     public String historial(@RequestParam(required = false)
-                            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
+                            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+                            @RequestParam(required = false)
+                            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
                             Model model) {
-        LocalDate dia = fecha != null ? fecha : LocalDate.now();
-        List<Venta> ventas = ventaService.ventasDelDia(dia);
+        LocalDate hoy = LocalDate.now();
+        LocalDate d = desde != null ? desde : hoy;
+        LocalDate h = hasta != null ? hasta : (desde != null ? desde : hoy);
+        if (h.isBefore(d)) {
+            h = d;
+        }
+        List<Venta> ventas = ventaService.ventasEnRango(d, h);
 
-        BigDecimal totalDia = ventas.stream()
+        BigDecimal total = ventas.stream()
                 .map(Venta::getTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         model.addAttribute("ventas", ventas);
-        model.addAttribute("fecha", dia);
-        model.addAttribute("totalDia", totalDia);
+        model.addAttribute("desde", d);
+        model.addAttribute("hasta", h);
+        model.addAttribute("total", total);
         model.addAttribute("cantidadVentas", ventas.size());
         return "ventas/historial";
-    }
-
-    @GetMapping("/ventas/cierre")
-    public String cierre(@RequestParam(required = false)
-                         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
-                         Model model) {
-        LocalDate dia = fecha != null ? fecha : LocalDate.now();
-        model.addAttribute("cierre", ventaService.cierreDelDia(dia));
-        return "ventas/cierre";
     }
 
     // ------------------------------------------------------------------

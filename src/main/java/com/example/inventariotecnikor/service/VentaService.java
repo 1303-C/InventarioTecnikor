@@ -1,7 +1,6 @@
 package com.example.inventariotecnikor.service;
 
 import com.example.inventariotecnikor.exception.RecursoNoEncontradoException;
-import com.example.inventariotecnikor.model.EstadoVenta;
 import com.example.inventariotecnikor.model.FormaPago;
 import com.example.inventariotecnikor.model.LineaVenta;
 import com.example.inventariotecnikor.model.Producto;
@@ -12,9 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -113,46 +110,19 @@ public class VentaService {
                         "No existe la venta con id: " + id));
     }
 
-    /** Ventas de un dia concreto, de la mas reciente a la mas antigua. */
-    public List<Venta> ventasDelDia(LocalDate dia) {
-        return ventaRepository.findByFechaBetweenOrderByFechaDesc(
-                dia.atStartOfDay(), dia.plusDays(1).atStartOfDay());
-    }
-
     /**
-     * Cierre de caja de un dia: numero de ventas, total, desglose por forma
-     * de pago y efectivo esperado en el cajon. Las ventas ANULADAS no cuentan.
+     * Ventas entre dos fechas (ambas incluidas), de la mas reciente a la mas
+     * antigua. La usan el historial y, para el cierre de caja, CajaService.
      */
-    public CierreCaja cierreDelDia(LocalDate dia) {
-        List<Venta> ventas = ventasDelDia(dia).stream()
-                .filter(v -> v.getEstado() != EstadoVenta.ANULADA)
-                .toList();
-
-        List<CierreCaja.PorFormaPago> desglose = new ArrayList<>();
-        BigDecimal total = cero();
-        BigDecimal efectivo = cero();
-
-        for (FormaPago forma : FormaPago.values()) {
-            List<Venta> delTipo = ventas.stream()
-                    .filter(v -> v.getFormaPago() == forma)
-                    .toList();
-            BigDecimal totalTipo = delTipo.stream()
-                    .map(Venta::getTotal)
-                    .reduce(cero(), BigDecimal::add)
-                    .setScale(2, RoundingMode.HALF_UP);
-
-            desglose.add(new CierreCaja.PorFormaPago(forma, delTipo.size(), totalTipo));
-            total = total.add(totalTipo);
-            if (forma == FormaPago.EFECTIVO) {
-                efectivo = totalTipo;
-            }
+    public List<Venta> ventasEnRango(LocalDate desde, LocalDate hasta) {
+        if (desde == null || hasta == null) {
+            throw new IllegalArgumentException("Faltan las fechas del rango.");
         }
-
-        return new CierreCaja(dia, ventas.size(), total.setScale(2, RoundingMode.HALF_UP), efectivo, desglose);
-    }
-
-    private static BigDecimal cero() {
-        return BigDecimal.ZERO.setScale(2);
+        if (hasta.isBefore(desde)) {
+            throw new IllegalArgumentException("La fecha \"hasta\" no puede ser anterior a \"desde\".");
+        }
+        return ventaRepository.findByFechaBetweenOrderByFechaDesc(
+                desde.atStartOfDay(), hasta.plusDays(1).atStartOfDay());
     }
 
     private static String limpiar(String texto) {

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: main(~{::title}, ~{::section})}">
+<head>
+    <title>Cierre de caja · Inventario Tecnikor</title>
+</head>
+<body>
+<section>
+    <div class="fila-titulo">
+        <h1>Cierre de caja</h1>
+        <a class="boton-secundario" th:href="@{/ventas(desde=${cierre.desde},hasta=${cierre.hasta})}">Ver ventas del rango</a>
+    </div>
+
+    <form class="buscador" method="get" th:action="@{/caja}">
+        <label for="desde">Desde</label>
+        <input type="date" id="desde" name="desde" th:value="${cierre.desde}">
+        <label for="hasta">Hasta</label>
+        <input type="date" id="hasta" name="hasta" th:value="${cierre.hasta}">
+        <button type="submit">Ver</button>
+    </form>
+
+    <h2>Esperado por forma de pago</h2>
+    <div class="tarjetas">
+        <div class="tarjeta tarjeta-alerta">
+            <span class="tarjeta-numero"
+                  th:text="${#numbers.formatDecimal(cierre.efectivoEsperado, 1, 'POINT', 0, 'COMMA')}">0</span>
+            <span class="tarjeta-etiqueta">Efectivo esperado en el cajon</span>
+        </div>
+        <div class="tarjeta">
+            <span class="tarjeta-numero"
+                  th:text="${#numbers.formatDecimal(cierre.totalDe(T(com.example.inventariotecnikor.model.FormaPago).TARJETA), 1, 'POINT', 0, 'COMMA')}">0</span>
+            <span class="tarjeta-etiqueta">Esperado en datafono (tarjeta)</span>
+        </div>
+        <div class="tarjeta">
+            <span class="tarjeta-numero"
+                  th:text="${#numbers.formatDecimal(cierre.totalDe(T(com.example.inventariotecnikor.model.FormaPago).TRANSFERENCIA), 1, 'POINT', 0, 'COMMA')}">0</span>
+            <span class="tarjeta-etiqueta">Esperado en transferencias</span>
+        </div>
+    </div>
+
+    <h2>Resumen del rango</h2>
+    <div class="tarjetas">
+        <div class="tarjeta">
+            <span class="tarjeta-numero" th:text="${cierre.cantidadVentas}">0</span>
+            <span class="tarjeta-etiqueta">Ventas</span>
+        </div>
+        <div class="tarjeta">
+            <span class="tarjeta-numero"
+                  th:text="${#numbers.formatDecimal(cierre.totalVentas, 1, 'POINT', 0, 'COMMA')}">0</span>
+            <span class="tarjeta-etiqueta">Total vendido</span>
+        </div>
+        <div class="tarjeta">
+            <span class="tarjeta-numero"
+                  th:text="${#numbers.formatDecimal(cierre.ingresosCaja, 1, 'POINT', 0, 'COMMA')}">0</span>
+            <span class="tarjeta-etiqueta">Ingresos de caja</span>
+        </div>
+        <div class="tarjeta">
+            <span class="tarjeta-numero"
+                  th:text="${#numbers.formatDecimal(cierre.egresosCaja, 1, 'POINT', 0, 'COMMA')}">0</span>
+            <span class="tarjeta-etiqueta">Egresos de caja</span>
+        </div>
+    </div>
+
+    <h2>Ventas por forma de pago</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Forma de pago</th>
+            <th class="num">Ventas</th>
+            <th class="num">Total</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="d : ${cierre.desglosePorFormaPago}">
+            <td th:text="${d.formaPago.etiqueta}">-</td>
+            <td class="num" th:text="${d.cantidad}">0</td>
+            <td class="num" th:text="${#numbers.formatDecimal(d.total, 1, 'POINT', 0, 'COMMA')}">0</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="fila-2" style="margin-top:32px">
+        <!-- Registrar ingreso / egreso -->
+        <div>
+            <h2 style="margin-top:0">Registrar ingreso o egreso</h2>
+            <form class="formulario" method="post" th:action="@{/caja/movimientos}">
+                <input type="hidden" name="desde" th:value="${cierre.desde}">
+                <input type="hidden" name="hasta" th:value="${cierre.hasta}">
+                <div class="campo">
+                    <label for="tipo">Tipo</label>
+                    <select id="tipo" name="tipo">
+                        <option value="INGRESO">Ingreso (entra dinero)</option>
+                        <option value="EGRESO">Egreso (sale dinero)</option>
+                    </select>
+                </div>
+                <div class="campo">
+                    <label for="monto">Monto</label>
+                    <input type="number" id="monto" name="monto" min="0" step="1" required>
+                </div>
+                <div class="campo">
+                    <label for="motivo">Motivo</label>
+                    <input type="text" id="motivo" name="motivo" maxlength="200" required
+                           placeholder="Ej. pago proveedor / gasto papeleria / apertura de caja">
+                </div>
+                <div class="campo">
+                    <label for="responsableMov">Responsable</label>
+                    <input type="text" id="responsableMov" name="responsable" placeholder="Quien registra">
+                </div>
+                <button type="submit" class="boton">Registrar</button>
+            </form>
+        </div>
+
+        <!-- Arqueo -->
+        <div>
+            <h2 style="margin-top:0">Arqueo</h2>
+            <form class="formulario" method="post" th:action="@{/caja/arqueo}">
+                <input type="hidden" name="desde" th:value="${cierre.desde}">
+                <input type="hidden" name="hasta" th:value="${cierre.hasta}">
+                <p class="ayuda">
+                    Efectivo esperado en el cajon:
+                    <strong th:text="${#numbers.formatDecimal(cierre.efectivoEsperado, 1, 'POINT', 0, 'COMMA')}">0</strong>
+                </p>
+                <div class="campo">
+                    <label for="contado">Efectivo contado</label>
+                    <input type="number" id="contado" name="contado" min="0" step="1" required>
+                </div>
+                <div class="campo">
+                    <label for="responsableArqueo">Responsable</label>
+                    <input type="text" id="responsableArqueo" name="responsable" placeholder="Quien cuenta la caja">
+                </div>
+                <button type="submit" class="boton boton-secundario">Comparar y registrar diferencia</button>
+            </form>
+        </div>
+    </div>
+
+    <h2>Movimientos de caja del rango</h2>
+    <p class="vacio" th:if="${cierre.movimientosCaja.isEmpty()}">
+        No hay ingresos ni egresos registrados en este rango.
+    </p>
+    <table th:unless="${cierre.movimientosCaja.isEmpty()}">
+        <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Tipo</th>
+            <th class="num">Monto</th>
+            <th>Motivo</th>
+            <th>Responsable</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="m : ${cierre.movimientosCaja}">
+            <td th:text="${#temporals.format(m.fecha, 'dd/MM/yyyy HH:mm')}">fecha</td>
+            <td>
+                <span class="etiqueta"
+                      th:classappend="${m.tipo.name() == 'INGRESO'} ? 'etiqueta-entrada' : 'etiqueta-salida'"
+                      th:text="${m.tipo.etiqueta}">Tipo</span>
+            </td>
+            <td class="num" th:text="${#numbers.formatDecimal(m.monto, 1, 'POINT', 0, 'COMMA')}">0</td>
+            <td th:text="${m.motivo}">-</td>
+            <td th:text="${m.responsable} ?: '—'">-</td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+</body>
+</html>

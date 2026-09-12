@@ -3,9 +3,7 @@ package com.example.inventariotecnikor.service;
 import com.example.inventariotecnikor.exception.RecursoNoEncontradoException;
 import com.example.inventariotecnikor.exception.StockInsuficienteException;
 import com.example.inventariotecnikor.model.Categoria;
-import com.example.inventariotecnikor.model.EstadoVenta;
 import com.example.inventariotecnikor.model.FormaPago;
-import com.example.inventariotecnikor.model.LineaVenta;
 import com.example.inventariotecnikor.model.Producto;
 import com.example.inventariotecnikor.model.Venta;
 import com.example.inventariotecnikor.repository.ProductoRepository;
@@ -270,76 +268,31 @@ class VentaServiceTest {
     }
 
     // ------------------------------------------------------------------
-    //  Cierre de caja
+    //  ventasEnRango (la usa el historial y CajaService para el cierre)
     // ------------------------------------------------------------------
 
-    private Venta ventaCon(long numero, FormaPago formaPago, String precio, int cantidad) {
-        Venta v = new Venta(numero, formaPago, "Caja");
-        v.addLinea(new LineaVenta(bomba, cantidad, new BigDecimal(precio), 0));
-        v.recalcularTotales();
-        v.registrarPago(formaPago, formaPago.esEfectivo() ? new BigDecimal("999999") : null);
-        return v;
-    }
-
-    private static void set(Object destino, String campo, Object valor) {
-        try {
-            var f = destino.getClass().getDeclaredField(campo);
-            f.setAccessible(true);
-            f.set(destino, valor);
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     @Test
-    void cierreDelDia_agrupa_por_forma_de_pago_y_calcula_el_efectivo() {
-        when(ventaRepository.findByFechaBetweenOrderByFechaDesc(any(), any())).thenReturn(List.of(
-                ventaCon(1, FormaPago.EFECTIVO, "100.00", 1),
-                ventaCon(2, FormaPago.EFECTIVO, "50.00", 1),
-                ventaCon(3, FormaPago.TARJETA, "200.00", 1),
-                ventaCon(4, FormaPago.TRANSFERENCIA, "30.00", 1)));
-
-        CierreCaja cierre = ventaService.cierreDelDia(LocalDate.of(2026, 9, 10));
-
-        assertThat(cierre.cantidadVentas()).isEqualTo(4);
-        assertThat(cierre.total()).isEqualByComparingTo("380.00");
-        assertThat(cierre.efectivo()).isEqualByComparingTo("150.00");
-
-        assertThat(cierre.desglose()).hasSize(3);
-        var efectivo = cierre.desglose().stream()
-                .filter(d -> d.formaPago() == FormaPago.EFECTIVO).findFirst().orElseThrow();
-        assertThat(efectivo.cantidad()).isEqualTo(2);
-        assertThat(efectivo.total()).isEqualByComparingTo("150.00");
-    }
-
-    @Test
-    void cierreDelDia_no_cuenta_las_ventas_anuladas() {
-        Venta anulada = ventaCon(9, FormaPago.TARJETA, "500.00", 1);
-        set(anulada, "estado", EstadoVenta.ANULADA);
-
-        when(ventaRepository.findByFechaBetweenOrderByFechaDesc(any(), any())).thenReturn(List.of(
-                ventaCon(1, FormaPago.TARJETA, "200.00", 1),
-                anulada));
-
-        CierreCaja cierre = ventaService.cierreDelDia(LocalDate.of(2026, 9, 10));
-
-        assertThat(cierre.cantidadVentas()).isEqualTo(1);
-        assertThat(cierre.total()).isEqualByComparingTo("200.00");
-    }
-
-    @Test
-    void cierreDelDia_sin_ventas_da_ceros_y_lista_las_tres_formas_de_pago() {
+    void ventasEnRango_consulta_desde_el_inicio_del_dia_hasta_el_dia_siguiente_de_hasta() {
+        LocalDate desde = LocalDate.of(2026, 9, 1);
+        LocalDate hasta = LocalDate.of(2026, 9, 10);
         when(ventaRepository.findByFechaBetweenOrderByFechaDesc(any(), any())).thenReturn(List.of());
 
-        CierreCaja cierre = ventaService.cierreDelDia(LocalDate.of(2026, 9, 10));
+        ventaService.ventasEnRango(desde, hasta);
 
-        assertThat(cierre.cantidadVentas()).isZero();
-        assertThat(cierre.total()).isEqualByComparingTo("0.00");
-        assertThat(cierre.efectivo()).isEqualByComparingTo("0.00");
-        assertThat(cierre.desglose()).hasSize(3);
-        assertThat(cierre.desglose()).allSatisfy(d -> {
-            assertThat(d.cantidad()).isZero();
-            assertThat(d.total()).isEqualByComparingTo("0.00");
-        });
+        verify(ventaRepository).findByFechaBetweenOrderByFechaDesc(
+                desde.atStartOfDay(), hasta.plusDays(1).atStartOfDay());
+    }
+
+    @Test
+    void ventasEnRango_con_hasta_anterior_a_desde_lanza_IllegalArgument() {
+        assertThatThrownBy(() -> ventaService.ventasEnRango(
+                LocalDate.of(2026, 9, 10), LocalDate.of(2026, 9, 1)))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void ventasEnRango_sin_fechas_lanza_IllegalArgument() {
+        assertThatThrownBy(() -> ventaService.ventasEnRango(null, LocalDate.now()))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

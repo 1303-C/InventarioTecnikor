@@ -9,33 +9,35 @@
     <div class="fila-titulo">
         <h1>Ventas</h1>
         <span>
-            <a class="boton-secundario" th:href="@{/ventas/cierre(fecha=${fecha})}">Cierre de caja</a>
+            <a class="boton-secundario" th:href="@{/caja(desde=${desde},hasta=${hasta})}">Cierre de caja</a>
             <a class="boton" th:href="@{/ventas/nueva}">Nueva venta</a>
         </span>
     </div>
 
     <form class="buscador" method="get" th:action="@{/ventas}">
-        <label for="fecha">Dia</label>
-        <input type="date" id="fecha" name="fecha" th:value="${fecha}">
+        <label for="desde">Desde</label>
+        <input type="date" id="desde" name="desde" th:value="${desde}">
+        <label for="hasta">Hasta</label>
+        <input type="date" id="hasta" name="hasta" th:value="${hasta}">
         <button type="submit">Ver</button>
     </form>
 
     <div class="pos-resumen">
         <span><strong th:text="${cantidadVentas}">0</strong> venta(s)</span>
-        <span>Total del dia:
-            <strong th:text="${#numbers.formatDecimal(totalDia, 1, 'POINT', 0, 'COMMA')}">0</strong>
+        <span>Total del rango:
+            <strong th:text="${#numbers.formatDecimal(total, 1, 'POINT', 0, 'COMMA')}">0</strong>
         </span>
     </div>
 
     <p class="vacio" th:if="${ventas.isEmpty()}">
-        No hay ventas registradas ese dia.
+        No hay ventas registradas en ese rango.
     </p>
 
     <table th:unless="${ventas.isEmpty()}">
         <thead>
         <tr>
             <th class="num">#</th>
-            <th>Hora</th>
+            <th>Fecha</th>
             <th class="num">Unidades</th>
             <th>Forma de pago</th>
             <th class="num">Total</th>
@@ -45,7 +47,7 @@
         <tbody>
         <tr th:each="v : ${ventas}">
             <td class="num" th:text="${v.numero}">0</td>
-            <td th:text="${#temporals.format(v.fecha, 'HH:mm')}">00:00</td>
+            <td th:text="${#temporals.format(v.fecha, 'dd/MM/yyyy HH:mm')}">-</td>
             <td class="num" th:text="${v.totalUnidades}">0</td>
             <td th:text="${v.formaPago.etiqueta}">-</td>
             <td class="num" th:text="${#numbers.formatDecimal(v.total, 1, 'POINT', 0, 'COMMA')}">0</td>

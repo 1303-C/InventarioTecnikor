@@ -4,7 +4,6 @@ import com.example.inventariotecnikor.model.Categoria;
 import com.example.inventariotecnikor.model.FormaPago;
 import com.example.inventariotecnikor.model.Producto;
 import com.example.inventariotecnikor.model.Venta;
-import com.example.inventariotecnikor.service.CierreCaja;
 import com.example.inventariotecnikor.service.ProductoService;
 import com.example.inventariotecnikor.service.VentaService;
 import com.example.inventariotecnikor.service.ticket.TicketPrinter;
@@ -170,27 +169,24 @@ class VentaControllerTest {
     }
 
     @Test
-    void get_historial_lista_las_ventas_del_dia() throws Exception {
-        when(ventaService.ventasDelDia(any())).thenReturn(List.of());
+    void get_historial_lista_las_ventas_del_rango() throws Exception {
+        when(ventaService.ventasEnRango(any(), any())).thenReturn(List.of());
 
-        mvc.perform(get("/ventas").param("fecha", "2026-09-10"))
+        mvc.perform(get("/ventas").param("desde", "2026-09-01").param("hasta", "2026-09-10"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("ventas/historial"))
-                .andExpect(model().attributeExists("ventas", "fecha", "totalDia"));
+                .andExpect(model().attributeExists("ventas", "desde", "hasta", "total"));
+
+        verify(ventaService).ventasEnRango(LocalDate.of(2026, 9, 1), LocalDate.of(2026, 9, 10));
     }
 
     @Test
-    void get_cierre_muestra_el_cierre_de_caja() throws Exception {
-        BigDecimal cero = new BigDecimal("0.00");
-        CierreCaja cierre = new CierreCaja(LocalDate.of(2026, 9, 10), 0, cero, cero, List.of(
-                new CierreCaja.PorFormaPago(FormaPago.EFECTIVO, 0, cero),
-                new CierreCaja.PorFormaPago(FormaPago.TARJETA, 0, cero),
-                new CierreCaja.PorFormaPago(FormaPago.TRANSFERENCIA, 0, cero)));
-        when(ventaService.cierreDelDia(any())).thenReturn(cierre);
+    void get_historial_sin_parametros_usa_hoy_como_rango() throws Exception {
+        when(ventaService.ventasEnRango(any(), any())).thenReturn(List.of());
 
-        mvc.perform(get("/ventas/cierre").param("fecha", "2026-09-10"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("ventas/cierre"))
-                .andExpect(model().attributeExists("cierre"));
+        mvc.perform(get("/ventas"))
+                .andExpect(status().isOk());
+
+        verify(ventaService).ventasEnRango(LocalDate.now(), LocalDate.now());
     }
 }
