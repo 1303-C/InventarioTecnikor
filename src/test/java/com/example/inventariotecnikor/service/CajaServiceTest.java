@@ -5,6 +5,7 @@ import com.example.inventariotecnikor.model.EstadoVenta;
 import com.example.inventariotecnikor.model.FormaPago;
 import com.example.inventariotecnikor.model.LineaVenta;
 import com.example.inventariotecnikor.model.MovimientoCaja;
+import com.example.inventariotecnikor.model.OrigenMovimientoCaja;
 import com.example.inventariotecnikor.model.Producto;
 import com.example.inventariotecnikor.model.TipoMovimientoCaja;
 import com.example.inventariotecnikor.model.Venta;
@@ -135,8 +136,8 @@ class CajaServiceTest {
                 ventaCon(3, FormaPago.TARJETA, "200.00"),
                 ventaCon(4, FormaPago.TRANSFERENCIA, "30.00")));
         when(movimientoCajaRepository.findByFechaBetweenOrderByFechaDesc(any(), any())).thenReturn(List.of(
-                new MovimientoCaja(TipoMovimientoCaja.INGRESO, new BigDecimal("20.00"), "abono", null),
-                new MovimientoCaja(TipoMovimientoCaja.EGRESO, new BigDecimal("10.00"), "gasto", null)));
+                new MovimientoCaja(TipoMovimientoCaja.INGRESO, new BigDecimal("20.00"), "abono", null, OrigenMovimientoCaja.MANUAL),
+                new MovimientoCaja(TipoMovimientoCaja.EGRESO, new BigDecimal("10.00"), "gasto", null, OrigenMovimientoCaja.MANUAL)));
 
         CierreCaja cierre = cajaService.cierre(desde, hasta);
 
@@ -146,8 +147,25 @@ class CajaServiceTest {
         assertThat(cierre.egresosCaja()).isEqualByComparingTo("10.00");
         // efectivo de ventas (150) + ingresos (20) - egresos (10) = 160
         assertThat(cierre.efectivoEsperado()).isEqualByComparingTo("160.00");
+        assertThat(cierre.ajustesArqueo()).isEqualByComparingTo("0.00");
         assertThat(cierre.totalDe(FormaPago.TARJETA)).isEqualByComparingTo("200.00");
         assertThat(cierre.totalDe(FormaPago.TRANSFERENCIA)).isEqualByComparingTo("30.00");
+    }
+
+    @Test
+    void cierre_calcula_el_neto_de_los_ajustes_por_arqueo() {
+        sinVentasNiMovimientos();
+        when(movimientoCajaRepository.findByFechaBetweenOrderByFechaDesc(any(), any())).thenReturn(List.of(
+                new MovimientoCaja(TipoMovimientoCaja.INGRESO, new BigDecimal("500.00"), "Arqueo: sobran 500", null, OrigenMovimientoCaja.ARQUEO),
+                new MovimientoCaja(TipoMovimientoCaja.EGRESO, new BigDecimal("100.00"), "Arqueo: faltan 100", null, OrigenMovimientoCaja.ARQUEO),
+                new MovimientoCaja(TipoMovimientoCaja.INGRESO, new BigDecimal("20000.00"), "apertura de caja", null, OrigenMovimientoCaja.MANUAL)));
+
+        CierreCaja cierre = cajaService.cierre(desde, hasta);
+
+        // los ajustes por arqueo se calculan aparte de los ingresos/egresos manuales
+        assertThat(cierre.ajustesArqueo()).isEqualByComparingTo("400.00");
+        assertThat(cierre.ingresosCaja()).isEqualByComparingTo("20500.00");
+        assertThat(cierre.egresosCaja()).isEqualByComparingTo("100.00");
     }
 
     @Test
@@ -207,6 +225,7 @@ class CajaServiceTest {
         assertThat(m.getTipo()).isEqualTo(TipoMovimientoCaja.INGRESO);
         assertThat(m.getMonto()).isEqualByComparingTo("15000.00");
         assertThat(m.getMotivo()).contains("Arqueo");
+        assertThat(m.getOrigen()).isEqualTo(OrigenMovimientoCaja.ARQUEO);
     }
 
     @Test
@@ -220,6 +239,16 @@ class CajaServiceTest {
 
         assertThat(m.getTipo()).isEqualTo(TipoMovimientoCaja.EGRESO);
         assertThat(m.getMonto()).isEqualByComparingTo("10.00");
+        assertThat(m.getOrigen()).isEqualTo(OrigenMovimientoCaja.ARQUEO);
+    }
+
+    @Test
+    void un_movimiento_manual_no_tiene_origen_arqueo() {
+        when(movimientoCajaRepository.save(any(MovimientoCaja.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        MovimientoCaja m = cajaService.registrarIngreso(new BigDecimal("100"), "abono", "Ana");
+
+        assertThat(m.getOrigen()).isEqualTo(OrigenMovimientoCaja.MANUAL);
     }
 
     @Test

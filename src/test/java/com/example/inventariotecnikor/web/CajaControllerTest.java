@@ -2,6 +2,7 @@ package com.example.inventariotecnikor.web;
 
 import com.example.inventariotecnikor.model.FormaPago;
 import com.example.inventariotecnikor.model.MovimientoCaja;
+import com.example.inventariotecnikor.model.OrigenMovimientoCaja;
 import com.example.inventariotecnikor.model.TipoMovimientoCaja;
 import com.example.inventariotecnikor.service.CajaService;
 import com.example.inventariotecnikor.service.CierreCaja;
@@ -44,7 +45,7 @@ class CajaControllerTest {
                 new CierreCaja.PorFormaPago(FormaPago.EFECTIVO, 0, cero),
                 new CierreCaja.PorFormaPago(FormaPago.TARJETA, 0, cero),
                 new CierreCaja.PorFormaPago(FormaPago.TRANSFERENCIA, 0, cero)),
-                cero, cero, cero, List.of());
+                cero, cero, cero, cero, List.of());
     }
 
     @Test
@@ -115,8 +116,8 @@ class CajaControllerTest {
     @Test
     void post_arqueo_con_diferencia_registra_y_avisa() throws Exception {
         when(cajaService.arquear(any(), any(), any(), any()))
-                .thenReturn(Optional.of(new MovimientoCaja(
-                        TipoMovimientoCaja.INGRESO, new BigDecimal("15000.00"), "Arqueo: sobran 15000", "Ana")));
+                .thenReturn(Optional.of(new MovimientoCaja(TipoMovimientoCaja.INGRESO,
+                        new BigDecimal("15000.00"), "Arqueo: sobran 15000", "Ana", OrigenMovimientoCaja.ARQUEO)));
 
         mvc.perform(post("/caja/arqueo")
                         .param("desde", "2026-09-01")

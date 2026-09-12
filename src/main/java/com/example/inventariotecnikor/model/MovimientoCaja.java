@@ -43,6 +43,11 @@ public class MovimientoCaja {
     @Column(nullable = false, length = 10)
     private TipoMovimientoCaja tipo;
 
+    // Nullable a proposito: ver el comentario de OrigenMovimientoCaja.
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    private OrigenMovimientoCaja origen;
+
     /** Siempre positivo; el sentido lo da "tipo". */
     @Positive
     @Column(nullable = false, precision = 12, scale = 2)
@@ -64,11 +69,13 @@ public class MovimientoCaja {
     protected MovimientoCaja() {
     }
 
-    public MovimientoCaja(TipoMovimientoCaja tipo, BigDecimal monto, String motivo, String responsable) {
+    public MovimientoCaja(TipoMovimientoCaja tipo, BigDecimal monto, String motivo, String responsable,
+                          OrigenMovimientoCaja origen) {
         this.tipo = tipo;
         this.monto = monto;
         this.motivo = motivo;
         this.responsable = responsable;
+        this.origen = origen;
     }
 
     @PrePersist
@@ -82,6 +89,11 @@ public class MovimientoCaja {
 
     public TipoMovimientoCaja getTipo() {
         return tipo;
+    }
+
+    /** Filas antiguas sin la columna poblada cuentan como MANUAL. */
+    public OrigenMovimientoCaja getOrigen() {
+        return origen != null ? origen : OrigenMovimientoCaja.MANUAL;
     }
 
     public BigDecimal getMonto() {

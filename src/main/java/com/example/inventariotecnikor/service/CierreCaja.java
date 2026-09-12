@@ -26,6 +26,8 @@ public record CierreCaja(
         BigDecimal ingresosCaja,
         BigDecimal egresosCaja,
         BigDecimal efectivoEsperado,
+        /** Neto de los movimientos generados por un arqueo dentro del rango (positivo = sobro, negativo = falto). */
+        BigDecimal ajustesArqueo,
         List<MovimientoCaja> movimientosCaja) {
 
     /** Total y numero de ventas de una forma de pago concreta. */

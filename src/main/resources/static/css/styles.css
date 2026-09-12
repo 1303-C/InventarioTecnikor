@@ -474,11 +474,30 @@ input[readonly] { background: #f0f2f5; color: var(--color-texto-suave); }
 .pos-cliente summary { cursor: pointer; color: var(--color-texto-suave); font-size: 0.9rem; }
 .pos-resumen {
     display: flex;
-    gap: 28px;
+    flex-wrap: wrap;
+    gap: 8px 28px;
     margin: 4px 0 18px;
     font-size: 0.95rem;
 }
 .pos-resumen strong { color: var(--tk-navy); }
+
+/* ---------- Secciones plegables (cierre de caja) ---------- */
+details.plegable {
+    background: var(--color-panel);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radio);
+    box-shadow: var(--sombra);
+    padding: 4px 20px 4px;
+    margin: 16px 0;
+}
+details.plegable[open] { padding-bottom: 16px; }
+details.plegable summary {
+    cursor: pointer;
+    padding: 14px 0;
+    font-weight: 600;
+    color: var(--tk-navy);
+}
+details.plegable table { box-shadow: none; border: 0; margin-top: 4px; }
 
 @media (max-width: 720px) {
     .fila-2, .fila-3 { grid-template-columns: 1fr; }

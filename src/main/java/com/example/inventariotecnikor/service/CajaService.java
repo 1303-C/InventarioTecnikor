@@ -3,6 +3,7 @@ package com.example.inventariotecnikor.service;
 import com.example.inventariotecnikor.model.EstadoVenta;
 import com.example.inventariotecnikor.model.FormaPago;
 import com.example.inventariotecnikor.model.MovimientoCaja;
+import com.example.inventariotecnikor.model.OrigenMovimientoCaja;
 import com.example.inventariotecnikor.model.TipoMovimientoCaja;
 import com.example.inventariotecnikor.model.Venta;
 import com.example.inventariotecnikor.repository.MovimientoCajaRepository;
@@ -44,23 +45,24 @@ public class CajaService {
 
     @Transactional
     public MovimientoCaja registrarIngreso(BigDecimal monto, String motivo, String responsable) {
-        return registrar(TipoMovimientoCaja.INGRESO, monto, motivo, responsable);
+        return registrar(TipoMovimientoCaja.INGRESO, monto, motivo, responsable, OrigenMovimientoCaja.MANUAL);
     }
 
     @Transactional
     public MovimientoCaja registrarEgreso(BigDecimal monto, String motivo, String responsable) {
-        return registrar(TipoMovimientoCaja.EGRESO, monto, motivo, responsable);
+        return registrar(TipoMovimientoCaja.EGRESO, monto, motivo, responsable, OrigenMovimientoCaja.MANUAL);
     }
 
-    private MovimientoCaja registrar(TipoMovimientoCaja tipo, BigDecimal monto, String motivo, String responsable) {
+    private MovimientoCaja registrar(TipoMovimientoCaja tipo, BigDecimal monto, String motivo, String responsable,
+                                     OrigenMovimientoCaja origen) {
         if (monto == null || monto.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("El monto debe ser mayor que cero.");
         }
         if (motivo == null || motivo.isBlank()) {
             throw new IllegalArgumentException("Todo movimiento de caja necesita un motivo.");
         }
-        return movimientoCajaRepository.save(
-                new MovimientoCaja(tipo, monto.setScale(2, RoundingMode.HALF_UP), motivo.trim(), limpiar(responsable)));
+        return movimientoCajaRepository.save(new MovimientoCaja(
+                tipo, monto.setScale(2, RoundingMode.HALF_UP), motivo.trim(), limpiar(responsable), origen));
     }
 
     // ------------------------------------------------------------------
@@ -106,9 +108,14 @@ public class CajaService {
         BigDecimal ingresosCaja = sumaPorTipo(movimientos, TipoMovimientoCaja.INGRESO);
         BigDecimal egresosCaja = sumaPorTipo(movimientos, TipoMovimientoCaja.EGRESO);
         BigDecimal efectivoEsperado = efectivoVentas.add(ingresosCaja).subtract(egresosCaja);
+        BigDecimal ajustesArqueo = movimientos.stream()
+                .filter(m -> m.getOrigen() == OrigenMovimientoCaja.ARQUEO)
+                .map(m -> m.getMonto().multiply(BigDecimal.valueOf(m.getTipo().getSigno())))
+                .reduce(cero(), BigDecimal::add)
+                .setScale(2, RoundingMode.HALF_UP);
 
         return new CierreCaja(desde, hasta, ventas.size(), totalVentas.setScale(2, RoundingMode.HALF_UP),
-                desglose, ingresosCaja, egresosCaja, efectivoEsperado, movimientos);
+                desglose, ingresosCaja, egresosCaja, efectivoEsperado, ajustesArqueo, movimientos);
     }
 
     /**
@@ -136,8 +143,8 @@ public class CajaService {
         String detalle = "Arqueo " + rango + ": esperado " + esperado + ", contado " + contado;
 
         return Optional.of(diferencia.compareTo(BigDecimal.ZERO) > 0
-                ? registrarIngreso(diferencia, detalle, responsable)
-                : registrarEgreso(diferencia.abs(), detalle, responsable));
+                ? registrar(TipoMovimientoCaja.INGRESO, diferencia, detalle, responsable, OrigenMovimientoCaja.ARQUEO)
+                : registrar(TipoMovimientoCaja.EGRESO, diferencia.abs(), detalle, responsable, OrigenMovimientoCaja.ARQUEO));
     }
 
     // ------------------------------------------------------------------
