@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: main(~{::title}, ~{::section})}">
+<head>
+    <title>Planes de alquiler · Inventario Tecnikor</title>
+</head>
+<body>
+<section>
+    <div class="fila-titulo">
+        <h1>Planes de alquiler</h1>
+        <a class="boton-secundario" th:href="@{/alquiler}">Volver</a>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Nombre</th>
+            <th class="num">Tarifa por hora</th>
+            <th></th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="p : ${planes}">
+            <td th:text="${p.nombre}">-</td>
+            <td class="num">
+                <form method="post" class="pos-cantidad" th:action="@{/alquiler/planes/{id}(id=${p.id})}">
+                    <input type="number" name="tarifaPorHora" min="0" step="1" th:value="${p.tarifaPorHora}">
+                    <button type="submit" class="boton-mini">Guardar</button>
+                </form>
+            </td>
+            <td th:text="${p.activo} ? 'Activo' : 'Inactivo'">-</td>
+            <td>
+                <form th:if="${p.activo}" method="post" th:action="@{/alquiler/planes/{id}/desactivar(id=${p.id})}">
+                    <button type="submit" class="boton-mini boton-peligro">Desactivar</button>
+                </form>
+                <form th:unless="${p.activo}" method="post" th:action="@{/alquiler/planes/{id}/reactivar(id=${p.id})}">
+                    <button type="submit" class="boton-mini">Reactivar</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h2>Nuevo plan</h2>
+    <form class="formulario" method="post" th:action="@{/alquiler/planes}">
+        <div class="campo">
+            <label for="nombre">Nombre</label>
+            <input type="text" id="nombre" name="nombre" maxlength="60" required>
+        </div>
+        <div class="campo">
+            <label for="tarifaNueva">Tarifa por hora</label>
+            <input type="number" id="tarifaNueva" name="tarifaPorHora" min="0" step="1" required>
+        </div>
+        <button type="submit" class="boton">Agregar plan</button>
+    </form>
+</section>
+</body>
+</html>

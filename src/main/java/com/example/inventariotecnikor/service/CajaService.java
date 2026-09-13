@@ -2,8 +2,10 @@ package com.example.inventariotecnikor.service;
 
 import com.example.inventariotecnikor.model.EstadoVenta;
 import com.example.inventariotecnikor.model.FormaPago;
+import com.example.inventariotecnikor.model.LineaVenta;
 import com.example.inventariotecnikor.model.MovimientoCaja;
 import com.example.inventariotecnikor.model.OrigenMovimientoCaja;
+import com.example.inventariotecnikor.model.TipoLinea;
 import com.example.inventariotecnikor.model.TipoMovimientoCaja;
 import com.example.inventariotecnikor.model.Venta;
 import com.example.inventariotecnikor.repository.MovimientoCajaRepository;
@@ -114,8 +116,19 @@ public class CajaService {
                 .reduce(cero(), BigDecimal::add)
                 .setScale(2, RoundingMode.HALF_UP);
 
+        List<CierreCaja.PorTipoLinea> desgloseLineas = new ArrayList<>();
+        for (TipoLinea tipo : TipoLinea.values()) {
+            BigDecimal totalTipo = ventas.stream()
+                    .flatMap(v -> v.getLineas().stream())
+                    .filter(l -> l.getTipo() == tipo)
+                    .map(LineaVenta::getImporte)
+                    .reduce(cero(), BigDecimal::add)
+                    .setScale(2, RoundingMode.HALF_UP);
+            desgloseLineas.add(new CierreCaja.PorTipoLinea(tipo, totalTipo));
+        }
+
         return new CierreCaja(desde, hasta, ventas.size(), totalVentas.setScale(2, RoundingMode.HALF_UP),
-                desglose, ingresosCaja, egresosCaja, efectivoEsperado, ajustesArqueo, movimientos);
+                desglose, desgloseLineas, ingresosCaja, egresosCaja, efectivoEsperado, ajustesArqueo, movimientos);
     }
 
     /**

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: main(~{::title}, ~{::section})}">
+<head>
+    <title>Alquiler de lavadoras · Inventario Tecnikor</title>
+</head>
+<body>
+<section>
+    <div class="fila-titulo">
+        <h1>Alquiler de lavadoras</h1>
+        <span>
+            <a class="boton-secundario" th:href="@{/alquiler/planes}">Planes y tarifas</a>
+            <a class="boton" th:href="@{/alquiler/lavadoras/nueva}">+ Nueva lavadora</a>
+        </span>
+    </div>
+
+    <h2>Prestadas ahora</h2>
+    <p class="vacio" th:if="${alquileresActivos.isEmpty()}">
+        No hay lavadoras prestadas en este momento.
+    </p>
+    <table th:unless="${alquileresActivos.isEmpty()}">
+        <thead>
+        <tr>
+            <th>Lavadora</th>
+            <th>Cliente</th>
+            <th>Desde</th>
+            <th>Deberia volver</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="a : ${alquileresActivos}">
+            <td class="mono" th:text="${a.lavadora.codigo} + ' (' + ${a.lavadora.plan.nombre} + ')'">-</td>
+            <td th:text="${a.cliente} ?: '—'">-</td>
+            <td th:text="${#temporals.format(a.fechaInicio, 'dd/MM/yyyy HH:mm')}">-</td>
+            <td th:text="${#temporals.format(a.fechaFinEstimada, 'dd/MM/yyyy HH:mm')}">-</td>
+            <td>
+                <form method="post" th:action="@{/alquiler/{id}/devolver(id=${a.id})}">
+                    <button type="submit" class="boton-mini">Marcar devuelta</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h2>Flota</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Codigo</th>
+            <th>Plan</th>
+            <th>Estado</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="l : ${lavadoras}">
+            <td class="mono" th:text="${l.codigo}">-</td>
+            <td th:text="${l.plan.nombre}">-</td>
+            <td>
+                <span class="etiqueta"
+                      th:classappend="${l.estado.name() == 'DISPONIBLE'} ? 'etiqueta-entrada' : (${l.estado.name() == 'PRESTADA'} ? 'etiqueta-ajuste' : 'etiqueta-salida')"
+                      th:text="${l.estado.etiqueta}">Estado</span>
+            </td>
+            <td class="acciones">
+                <form th:if="${l.estado.name() == 'DISPONIBLE'}" method="post"
+                      th:action="@{/alquiler/lavadoras/{id}/estado(id=${l.id})}">
+                    <input type="hidden" name="estado" value="FUERA_DE_SERVICIO">
+                    <button type="submit" class="boton-mini boton-peligro">Fuera de servicio</button>
+                </form>
+                <form th:if="${l.estado.name() == 'FUERA_DE_SERVICIO'}" method="post"
+                      th:action="@{/alquiler/lavadoras/{id}/estado(id=${l.id})}">
+                    <input type="hidden" name="estado" value="DISPONIBLE">
+                    <button type="submit" class="boton-mini">Disponible</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: main(~{::title}, ~{::section})}">
+<head>
+    <title>Nueva lavadora · Inventario Tecnikor</title>
+</head>
+<body>
+<section>
+    <h1>Nueva lavadora</h1>
+
+    <form class="formulario" method="post" th:action="@{/alquiler/lavadoras}">
+        <div class="campo">
+            <label for="codigo">Codigo</label>
+            <input type="text" id="codigo" name="codigo" maxlength="30" required
+                   placeholder="Ej. PEQ-01" autofocus>
+        </div>
+        <div class="campo">
+            <label for="planId">Plan</label>
+            <select id="planId" name="planId">
+                <option th:each="p : ${planes}" th:value="${p.id}" th:text="${p.nombre}">Plan</option>
+            </select>
+        </div>
+        <div class="acciones-form">
+            <button type="submit" class="boton">Guardar</button>
+            <a class="boton-secundario" th:href="@{/alquiler}">Cancelar</a>
+        </div>
+    </form>
+</section>
+</body>
+</html>

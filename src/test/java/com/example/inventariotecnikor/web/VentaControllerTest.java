@@ -4,6 +4,7 @@ import com.example.inventariotecnikor.model.Categoria;
 import com.example.inventariotecnikor.model.FormaPago;
 import com.example.inventariotecnikor.model.Producto;
 import com.example.inventariotecnikor.model.Venta;
+import com.example.inventariotecnikor.service.LavadoraService;
 import com.example.inventariotecnikor.service.ProductoService;
 import com.example.inventariotecnikor.service.VentaService;
 import com.example.inventariotecnikor.service.ticket.TicketPrinter;
@@ -52,6 +53,8 @@ class VentaControllerTest {
     @MockitoBean
     VentaService ventaService;
     @MockitoBean
+    LavadoraService lavadoraService;
+    @MockitoBean
     TicketPrinter ticketPrinter;
     @MockitoBean
     CorrectorTeclado correctorTeclado;
@@ -82,6 +85,8 @@ class VentaControllerTest {
 
     @Test
     void get_nueva_muestra_la_pantalla_de_venta() throws Exception {
+        when(lavadoraService.listarTodas()).thenReturn(List.of());
+
         mvc.perform(get("/ventas/nueva"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("ventas/nueva"))
@@ -124,7 +129,7 @@ class VentaControllerTest {
     void cobrar_registra_la_venta_imprime_el_ticket_y_redirige_al_detalle() throws Exception {
         MockHttpSession sesion = new MockHttpSession();
         when(productoService.buscarPorQrOpcional("ABC")).thenReturn(Optional.of(producto(1, "ABC", "100")));
-        when(ventaService.registrar(any(), eq(FormaPago.TARJETA), isNull(), any(), any(), any()))
+        when(ventaService.registrar(any(), any(), eq(FormaPago.TARJETA), isNull(), any(), any(), any()))
                 .thenReturn(venta(55, 1, FormaPago.TARJETA));
 
         // llena el carrito en esta sesion
@@ -137,7 +142,7 @@ class VentaControllerTest {
                 .andExpect(flash().attributeExists("mensajeExito"));
 
         verify(ventaService).registrar(
-                argThat(lineas -> lineas.size() == 1), eq(FormaPago.TARJETA), isNull(),
+                argThat(lineas -> lineas.size() == 1), any(), eq(FormaPago.TARJETA), isNull(),
                 any(), any(), any());
         verify(ticketPrinter).imprimir(any(Venta.class));
     }
@@ -155,7 +160,7 @@ class VentaControllerTest {
                 .andExpect(redirectedUrl("/ventas/nueva"))
                 .andExpect(flash().attributeExists("mensajeError"));
 
-        verify(ventaService, never()).registrar(any(), any(), any(), anyString(), any(), any());
+        verify(ventaService, never()).registrar(any(), any(), any(), any(), anyString(), any(), any());
     }
 
     @Test

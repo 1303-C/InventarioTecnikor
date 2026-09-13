@@ -117,6 +117,24 @@
         </table>
     </details>
 
+    <details class="plegable">
+        <summary>Por linea de negocio</summary>
+        <table>
+            <thead>
+            <tr>
+                <th>Linea</th>
+                <th class="num">Total</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="d : ${cierre.desglosePorTipoLinea}">
+                <td th:text="${d.tipo.etiqueta}">-</td>
+                <td class="num" th:text="${#numbers.formatDecimal(d.total, 1, 'POINT', 0, 'COMMA')}">0</td>
+            </tr>
+            </tbody>
+        </table>
+    </details>
+
     <details class="plegable" open>
         <summary th:text="'Movimientos de caja del rango (' + ${cierre.movimientosCaja.size()} + ')'">Movimientos de caja</summary>
         <p class="vacio" th:if="${cierre.movimientosCaja.isEmpty()}">

@@ -17,6 +17,45 @@
         <button type="submit" class="boton">Agregar</button>
     </form>
 
+    <div class="fila-2 pos-libres">
+        <form method="post" th:action="@{/ventas/nueva/alquiler}" class="pos-libre-form">
+            <strong>Alquiler de lavadora</strong>
+            <div class="campo">
+                <label for="lavadoraId">Lavadora disponible</label>
+                <select id="lavadoraId" name="lavadoraId" th:disabled="${lavadorasDisponibles.isEmpty()}">
+                    <option th:each="l : ${lavadorasDisponibles}" th:value="${l.id}"
+                            th:text="${l.codigo + ' - ' + l.plan.nombre + ' ($' + #numbers.formatDecimal(l.plan.tarifaPorHora, 1, 'POINT', 0, 'COMMA') + '/hora)'}">
+                        Lavadora
+                    </option>
+                </select>
+                <span class="ayuda" th:if="${lavadorasDisponibles.isEmpty()}">No hay lavadoras disponibles ahora mismo.</span>
+            </div>
+            <div class="campo">
+                <label for="horas">Horas</label>
+                <input type="number" id="horas" name="horas" min="1" value="1">
+            </div>
+            <div class="campo">
+                <label for="clienteAlquiler">Cliente</label>
+                <input type="text" id="clienteAlquiler" name="cliente" placeholder="Quien se la lleva">
+            </div>
+            <button type="submit" class="boton-mini" th:disabled="${lavadorasDisponibles.isEmpty()}">Agregar alquiler</button>
+        </form>
+
+        <form method="post" th:action="@{/ventas/nueva/servicio}" class="pos-libre-form">
+            <strong>Servicio de mantenimiento</strong>
+            <div class="campo">
+                <label for="descripcionServicio">Descripcion</label>
+                <input type="text" id="descripcionServicio" name="descripcion" maxlength="150"
+                       placeholder="Ej. Visita/diagnostico, Mano de obra...">
+            </div>
+            <div class="campo">
+                <label for="montoServicio">Monto</label>
+                <input type="number" id="montoServicio" name="monto" min="0" step="1">
+            </div>
+            <button type="submit" class="boton-mini">Agregar servicio</button>
+        </form>
+    </div>
+
     <div class="pos">
         <!-- Carrito -->
         <div class="pos-carrito">
@@ -55,6 +94,22 @@
                         <form method="post"
                               th:action="@{/ventas/nueva/lineas/{id}(id=${i.productoId})}">
                             <input type="hidden" name="cantidad" value="0">
+                            <button type="submit" class="boton-mini boton-peligro">Quitar</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:each="l : ${carrito.libres}">
+                    <td>
+                        <span th:text="${l.descripcion}">Concepto</span><br>
+                        <span class="mono" style="font-size:.8rem" th:text="${l.tipo.etiqueta}">Tipo</span>
+                    </td>
+                    <td class="num"
+                        th:text="${#numbers.formatDecimal(l.precioUnitario, 1, 'POINT', 0, 'COMMA')}">0</td>
+                    <td class="num" th:text="${l.cantidad}">0</td>
+                    <td class="num"
+                        th:text="${#numbers.formatDecimal(l.importe, 1, 'POINT', 0, 'COMMA')}">0</td>
+                    <td>
+                        <form method="post" th:action="@{/ventas/nueva/libres/{id}(id=${l.id})}">
                             <button type="submit" class="boton-mini boton-peligro">Quitar</button>
                         </form>
                     </td>

@@ -3,6 +3,7 @@ package com.example.inventariotecnikor.web;
 import com.example.inventariotecnikor.model.FormaPago;
 import com.example.inventariotecnikor.model.MovimientoCaja;
 import com.example.inventariotecnikor.model.OrigenMovimientoCaja;
+import com.example.inventariotecnikor.model.TipoLinea;
 import com.example.inventariotecnikor.model.TipoMovimientoCaja;
 import com.example.inventariotecnikor.service.CajaService;
 import com.example.inventariotecnikor.service.CierreCaja;
@@ -45,6 +46,10 @@ class CajaControllerTest {
                 new CierreCaja.PorFormaPago(FormaPago.EFECTIVO, 0, cero),
                 new CierreCaja.PorFormaPago(FormaPago.TARJETA, 0, cero),
                 new CierreCaja.PorFormaPago(FormaPago.TRANSFERENCIA, 0, cero)),
+                List.of(
+                        new CierreCaja.PorTipoLinea(TipoLinea.PRODUCTO, cero),
+                        new CierreCaja.PorTipoLinea(TipoLinea.ALQUILER, cero),
+                        new CierreCaja.PorTipoLinea(TipoLinea.MANTENIMIENTO, cero)),
                 cero, cero, cero, cero, List.of());
     }
 

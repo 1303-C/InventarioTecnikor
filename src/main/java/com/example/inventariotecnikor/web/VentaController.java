@@ -3,8 +3,10 @@ package com.example.inventariotecnikor.web;
 import com.example.inventariotecnikor.exception.StockInsuficienteException;
 import com.example.inventariotecnikor.exception.TicketException;
 import com.example.inventariotecnikor.model.FormaPago;
+import com.example.inventariotecnikor.model.Lavadora;
 import com.example.inventariotecnikor.model.Producto;
 import com.example.inventariotecnikor.model.Venta;
+import com.example.inventariotecnikor.service.LavadoraService;
 import com.example.inventariotecnikor.service.ProductoService;
 import com.example.inventariotecnikor.service.VentaService;
 import com.example.inventariotecnikor.service.ticket.TicketPrinter;
@@ -32,6 +34,9 @@ import java.util.List;
  *   GET  /ventas/nueva                 -> pantalla de venta (carrito en sesion)
  *   POST /ventas/nueva/lineas          -> agrega un producto (codigo escaneado)
  *   POST /ventas/nueva/lineas/{id}     -> cambia la cantidad de una linea
+ *   POST /ventas/nueva/alquiler        -> agrega un alquiler de lavadora (linea libre)
+ *   POST /ventas/nueva/servicio        -> agrega un cargo de mantenimiento (linea libre)
+ *   POST /ventas/nueva/libres/{id}     -> quita una linea libre
  *   POST /ventas/nueva/vaciar          -> vacia el carrito
  *   POST /ventas                       -> cobra: registra la Venta e imprime el ticket
  *   GET  /ventas/{id}                  -> detalle de una venta
@@ -40,24 +45,29 @@ import java.util.List;
  *
  * El carrito vive en {@link CarritoVenta} (sesion). La impresion del ticket
  * NO tumba la venta: si el papel no sale, la venta queda guardada y se
- * reimprime desde el detalle. El cierre de caja vive en {@link CajaController}.
+ * reimprime desde el detalle (y, para alquiler/mantenimiento hechos fuera
+ * del local, ni siquiera hace falta imprimir: lo que importa es que quede
+ * registrado). El cierre de caja vive en {@link CajaController}.
  */
 @Controller
 public class VentaController {
 
     private final ProductoService productoService;
     private final VentaService ventaService;
+    private final LavadoraService lavadoraService;
     private final CarritoVenta carrito;
     private final CorrectorTeclado correctorTeclado;
     private final TicketPrinter ticketPrinter;
 
     public VentaController(ProductoService productoService,
                            VentaService ventaService,
+                           LavadoraService lavadoraService,
                            CarritoVenta carrito,
                            CorrectorTeclado correctorTeclado,
                            TicketPrinter ticketPrinter) {
         this.productoService = productoService;
         this.ventaService = ventaService;
+        this.lavadoraService = lavadoraService;
         this.carrito = carrito;
         this.correctorTeclado = correctorTeclado;
         this.ticketPrinter = ticketPrinter;
@@ -71,6 +81,9 @@ public class VentaController {
     public String nueva(Model model) {
         model.addAttribute("carrito", carrito);
         model.addAttribute("formasPago", FormaPago.values());
+        model.addAttribute("lavadorasDisponibles", lavadoraService.listarTodas().stream()
+                .filter(Lavadora::estaDisponible)
+                .toList());
         if (!model.containsAttribute("cobro")) {
             model.addAttribute("cobro", new CobroForm());
         }
@@ -105,6 +118,45 @@ public class VentaController {
     public String cambiarCantidad(@PathVariable Long productoId,
                                   @RequestParam int cantidad) {
         carrito.cambiarCantidad(productoId, cantidad);
+        return "redirect:/ventas/nueva";
+    }
+
+    @PostMapping("/ventas/nueva/alquiler")
+    public String agregarAlquiler(@RequestParam Long lavadoraId,
+                                  @RequestParam int horas,
+                                  @RequestParam(required = false) String cliente,
+                                  RedirectAttributes flash) {
+        try {
+            Lavadora lavadora = lavadoraService.obtenerPorId(lavadoraId);
+            if (!lavadora.estaDisponible()) {
+                flash.addFlashAttribute("mensajeError",
+                        "La lavadora \"" + lavadora.getCodigo() + "\" no esta disponible ahora mismo.");
+            } else {
+                carrito.agregarAlquiler(lavadora, horas, cliente);
+                flash.addFlashAttribute("mensajeExito", "Alquiler agregado: " + lavadora.getCodigo());
+            }
+        } catch (IllegalArgumentException ex) {
+            flash.addFlashAttribute("mensajeError", ex.getMessage());
+        }
+        return "redirect:/ventas/nueva";
+    }
+
+    @PostMapping("/ventas/nueva/servicio")
+    public String agregarServicio(@RequestParam String descripcion,
+                                  @RequestParam BigDecimal monto,
+                                  RedirectAttributes flash) {
+        try {
+            carrito.agregarServicio(descripcion, monto);
+            flash.addFlashAttribute("mensajeExito", "Servicio agregado.");
+        } catch (IllegalArgumentException ex) {
+            flash.addFlashAttribute("mensajeError", ex.getMessage());
+        }
+        return "redirect:/ventas/nueva";
+    }
+
+    @PostMapping("/ventas/nueva/libres/{id}")
+    public String quitarLibre(@PathVariable Long id) {
+        carrito.quitarLibre(id);
         return "redirect:/ventas/nueva";
     }
 
@@ -151,6 +203,7 @@ public class VentaController {
         try {
             venta = ventaService.registrar(
                     carrito.aLineasSolicitadas(),
+                    carrito.aLineasLibresSolicitadas(),
                     cobro.getFormaPago(),
                     cobro.getMontoRecibido(),
                     cobro.getResponsable(),

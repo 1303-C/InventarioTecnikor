@@ -7,6 +7,7 @@ import com.example.inventariotecnikor.model.LineaVenta;
 import com.example.inventariotecnikor.model.MovimientoCaja;
 import com.example.inventariotecnikor.model.OrigenMovimientoCaja;
 import com.example.inventariotecnikor.model.Producto;
+import com.example.inventariotecnikor.model.TipoLinea;
 import com.example.inventariotecnikor.model.TipoMovimientoCaja;
 import com.example.inventariotecnikor.model.Venta;
 import com.example.inventariotecnikor.repository.MovimientoCajaRepository;
@@ -61,6 +62,14 @@ class CajaServiceTest {
         v.addLinea(new LineaVenta(bomba, 1, new BigDecimal(precio), 0));
         v.recalcularTotales();
         v.registrarPago(formaPago, formaPago.esEfectivo() ? new BigDecimal("999999") : null);
+        return v;
+    }
+
+    private Venta ventaConLineaLibre(long numero, TipoLinea tipo, String descripcion, String monto) {
+        Venta v = new Venta(numero, FormaPago.TARJETA, "Caja");
+        v.addLinea(new LineaVenta(tipo, descripcion, 1, new BigDecimal(monto)));
+        v.recalcularTotales();
+        v.registrarPago(FormaPago.TARJETA, null);
         return v;
     }
 
@@ -150,6 +159,22 @@ class CajaServiceTest {
         assertThat(cierre.ajustesArqueo()).isEqualByComparingTo("0.00");
         assertThat(cierre.totalDe(FormaPago.TARJETA)).isEqualByComparingTo("200.00");
         assertThat(cierre.totalDe(FormaPago.TRANSFERENCIA)).isEqualByComparingTo("30.00");
+    }
+
+    @Test
+    void cierre_desglosa_por_linea_de_negocio() {
+        when(ventaService.ventasEnRango(desde, hasta)).thenReturn(List.of(
+                ventaCon(1, FormaPago.TARJETA, "100.00"), // producto
+                ventaConLineaLibre(2, TipoLinea.ALQUILER, "Alquiler PEQ-01", "15000"),
+                ventaConLineaLibre(3, TipoLinea.MANTENIMIENTO, "Mano de obra", "50000")));
+        when(movimientoCajaRepository.findByFechaBetweenOrderByFechaDesc(any(), any())).thenReturn(List.of());
+
+        CierreCaja cierre = cajaService.cierre(desde, hasta);
+
+        assertThat(cierre.totalDe(TipoLinea.PRODUCTO)).isEqualByComparingTo("100.00");
+        assertThat(cierre.totalDe(TipoLinea.ALQUILER)).isEqualByComparingTo("15000.00");
+        assertThat(cierre.totalDe(TipoLinea.MANTENIMIENTO)).isEqualByComparingTo("50000.00");
+        assertThat(cierre.totalVentas()).isEqualByComparingTo("65100.00");
     }
 
     @Test

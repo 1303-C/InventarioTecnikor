@@ -426,6 +426,21 @@ input[readonly] { background: #f0f2f5; color: var(--color-texto-suave); }
     padding: 12px 14px;
     letter-spacing: 0.03em;
 }
+.pos-libres { margin-bottom: 20px; }
+.pos-libre-form {
+    background: var(--color-panel);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radio);
+    padding: 12px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 10px;
+}
+.pos-libre-form strong { flex-basis: 100%; color: var(--tk-navy); font-size: 0.88rem; }
+.pos-libre-form .campo { margin-bottom: 0; }
+.pos-libre-form select, .pos-libre-form input[type="text"] { min-width: 160px; }
+.pos-libre-form input[type="number"] { width: 90px; }
 .pos {
     display: grid;
     grid-template-columns: 1fr 320px;
