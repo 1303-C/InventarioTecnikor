@@ -9,6 +9,7 @@
     <div class="fila-titulo">
         <h1>Alquiler de lavadoras</h1>
         <span>
+            <a class="boton-secundario" th:href="@{/alquiler/historial}">Historial</a>
             <a class="boton-secundario" th:href="@{/alquiler/planes}">Planes y tarifas</a>
             <a class="boton" th:href="@{/alquiler/lavadoras/nueva}">+ Nueva lavadora</a>
         </span>
@@ -29,11 +30,14 @@
         </tr>
         </thead>
         <tbody>
-        <tr th:each="a : ${alquileresActivos}">
+        <tr th:each="a : ${alquileresActivos}" th:classappend="${a.estaVencido()} ? 'fila-alerta'">
             <td class="mono" th:text="${a.lavadora.codigo} + ' (' + ${a.lavadora.plan.nombre} + ')'">-</td>
             <td th:text="${a.cliente} ?: '—'">-</td>
             <td th:text="${#temporals.format(a.fechaInicio, 'dd/MM/yyyy HH:mm')}">-</td>
-            <td th:text="${#temporals.format(a.fechaFinEstimada, 'dd/MM/yyyy HH:mm')}">-</td>
+            <td>
+                <span th:text="${#temporals.format(a.fechaFinEstimada, 'dd/MM/yyyy HH:mm')}">-</span>
+                <span class="etiqueta etiqueta-salida" th:if="${a.estaVencido()}">Vencido</span>
+            </td>
             <td>
                 <form method="post" th:action="@{/alquiler/{id}/devolver(id=${a.id})}">
                     <button type="submit" class="boton-mini">Marcar devuelta</button>

@@ -92,6 +92,15 @@ public class Venta {
     @Column(name = "cliente_documento", length = 40)
     private String clienteDocumento;
 
+    @Column(name = "motivo_anulacion", length = 200)
+    private String motivoAnulacion;
+
+    @Column(name = "fecha_anulacion")
+    private LocalDateTime fechaAnulacion;
+
+    @Column(name = "anulado_por", length = 80)
+    private String anuladoPor;
+
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("id asc")
     private List<LineaVenta> lineas = new ArrayList<>();
@@ -158,6 +167,21 @@ public class Venta {
         return lineas.stream().mapToInt(LineaVenta::getCantidad).sum();
     }
 
+    /**
+     * Marca la venta como ANULADA. No revierte nada por si sola: quien
+     * llama (VentaService.anular) es responsable de devolver el stock y
+     * las lavadoras ANTES de llamar aqui.
+     */
+    public void anular(String motivo, String responsable) {
+        if (estado == EstadoVenta.ANULADA) {
+            throw new IllegalArgumentException("La venta #" + numero + " ya estaba anulada.");
+        }
+        this.estado = EstadoVenta.ANULADA;
+        this.motivoAnulacion = motivo;
+        this.fechaAnulacion = LocalDateTime.now();
+        this.anuladoPor = responsable;
+    }
+
     private static BigDecimal cero() {
         return BigDecimal.ZERO.setScale(2);
     }
@@ -214,6 +238,18 @@ public class Venta {
 
     public String getClienteDocumento() {
         return clienteDocumento;
+    }
+
+    public String getMotivoAnulacion() {
+        return motivoAnulacion;
+    }
+
+    public LocalDateTime getFechaAnulacion() {
+        return fechaAnulacion;
+    }
+
+    public String getAnuladoPor() {
+        return anuladoPor;
     }
 
     public List<LineaVenta> getLineas() {

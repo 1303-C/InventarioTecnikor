@@ -163,6 +163,34 @@ public class VentaService {
         return guardada;
     }
 
+    /**
+     * Anula una venta: devuelve el stock de cada linea de PRODUCTO (una
+     * ENTRADA por linea, con motivo "Anulacion Venta #N") y, si genero algun
+     * alquiler que siga activo, la lavadora vuelve a estar disponible. Las
+     * lineas de MANTENIMIENTO no tocan nada mas. Todo en una transaccion: o
+     * se revierte y se anula todo, o no se anula nada.
+     *
+     * No se puede anular una venta ya anulada.
+     */
+    @Transactional
+    public Venta anular(Long ventaId, String motivo, String responsable) {
+        if (motivo == null || motivo.isBlank()) {
+            throw new IllegalArgumentException("Indica el motivo de la anulacion.");
+        }
+        Venta venta = obtenerPorId(ventaId);
+
+        for (LineaVenta linea : venta.getLineas()) {
+            if (linea.getTipo() == TipoLinea.PRODUCTO) {
+                movimientoService.registrarEntrada(linea.getProducto().getId(), linea.getCantidad(),
+                        "Anulacion Venta #" + venta.getNumero(), limpiar(responsable));
+            }
+        }
+        alquilerService.revertirPorVenta(venta.getId());
+
+        venta.anular(motivo.trim(), limpiar(responsable));
+        return venta;
+    }
+
     // ------------------------------------------------------------------
     //  Consultas
     // ------------------------------------------------------------------

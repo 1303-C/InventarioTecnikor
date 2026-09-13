@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: main(~{::title}, ~{::section})}">
+<head>
+    <title>Historial de alquileres · Inventario Tecnikor</title>
+</head>
+<body>
+<section>
+    <div class="fila-titulo">
+        <h1>Historial de alquileres</h1>
+        <a class="boton-secundario" th:href="@{/alquiler}">Volver</a>
+    </div>
+
+    <form class="buscador" method="get" th:action="@{/alquiler/historial}">
+        <label for="desde">Desde</label>
+        <input type="date" id="desde" name="desde" th:value="${desde}">
+        <label for="hasta">Hasta</label>
+        <input type="date" id="hasta" name="hasta" th:value="${hasta}">
+        <button type="submit">Ver</button>
+    </form>
+
+    <p class="vacio" th:if="${alquileres.isEmpty()}">
+        No hay alquileres devueltos en ese rango.
+    </p>
+
+    <table th:unless="${alquileres.isEmpty()}">
+        <thead>
+        <tr>
+            <th>Lavadora</th>
+            <th>Cliente</th>
+            <th class="num">Horas</th>
+            <th>Desde</th>
+            <th>Devuelto</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="a : ${alquileres}">
+            <td class="mono" th:text="${a.lavadora.codigo} + ' (' + ${a.lavadora.plan.nombre} + ')'">-</td>
+            <td th:text="${a.cliente} ?: '—'">-</td>
+            <td class="num" th:text="${a.horas}">0</td>
+            <td th:text="${#temporals.format(a.fechaInicio, 'dd/MM/yyyy HH:mm')}">-</td>
+            <td th:text="${#temporals.format(a.fechaDevolucion, 'dd/MM/yyyy HH:mm')}">-</td>
+            <td>
+                <a class="boton-mini" th:href="@{/ventas/{id}(id=${a.venta.id})}">Ver venta</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+</body>
+</html>

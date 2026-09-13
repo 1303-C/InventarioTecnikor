@@ -4,6 +4,7 @@ import com.example.inventariotecnikor.model.EstadoLavadora;
 import com.example.inventariotecnikor.service.AlquilerService;
 import com.example.inventariotecnikor.service.LavadoraService;
 import com.example.inventariotecnikor.service.PlanAlquilerService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 /**
  * Disponibilidad de la flota de lavadoras de alquiler, y el catalogo de
@@ -21,8 +23,9 @@ import java.math.BigDecimal;
  * la pantalla de venta (VentaController); aqui solo se ve el estado y se
  * marca la devolucion.
  *
- *   GET  /alquiler                          disponibilidad
+ *   GET  /alquiler                          disponibilidad (y prestamos vencidos)
  *   POST /alquiler/{id}/devolver            marca una lavadora como devuelta
+ *   GET  /alquiler/historial                prestamos ya devueltos (rango de fechas)
  *   GET  /alquiler/lavadoras/nueva          formulario de alta
  *   POST /alquiler/lavadoras                da de alta una lavadora
  *   POST /alquiler/lavadoras/{id}/estado    cambia el estado a mano (ej. averia)
@@ -65,6 +68,25 @@ public class AlquilerController {
             flash.addFlashAttribute("mensajeError", ex.getMessage());
         }
         return "redirect:/alquiler";
+    }
+
+    /** Prestamos ya devueltos, de un rango de fechas (un solo dia por defecto: hoy). */
+    @GetMapping("/historial")
+    public String historial(@RequestParam(required = false)
+                            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+                            @RequestParam(required = false)
+                            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+                            Model model) {
+        LocalDate hoy = LocalDate.now();
+        LocalDate d = desde != null ? desde : hoy;
+        LocalDate h = hasta != null ? hasta : (desde != null ? desde : hoy);
+        if (h.isBefore(d)) {
+            h = d;
+        }
+        model.addAttribute("alquileres", alquilerService.historial(d, h));
+        model.addAttribute("desde", d);
+        model.addAttribute("hasta", h);
+        return "alquiler/historial";
     }
 
     // ------------------------------------------------------------------

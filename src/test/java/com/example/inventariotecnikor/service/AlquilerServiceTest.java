@@ -17,6 +17,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -105,5 +107,62 @@ class AlquilerServiceTest {
 
         assertThatThrownBy(() -> alquilerService.obtenerPorId(99L))
                 .isInstanceOf(RecursoNoEncontradoException.class);
+    }
+
+    // ------------------------------------------------------------------
+    //  revertirPorVenta (lo usa VentaService.anular)
+    // ------------------------------------------------------------------
+
+    @Test
+    void revertirPorVenta_libera_la_lavadora_de_un_alquiler_activo() {
+        lavadora.setEstado(EstadoLavadora.PRESTADA);
+        Alquiler alquiler = new Alquiler(lavadora, venta, "Juan", 3);
+        when(alquilerRepository.findByVentaId(1L)).thenReturn(List.of(alquiler));
+
+        alquilerService.revertirPorVenta(1L);
+
+        assertThat(alquiler.getEstado()).isEqualTo(EstadoAlquiler.DEVUELTO);
+        assertThat(lavadora.getEstado()).isEqualTo(EstadoLavadora.DISPONIBLE);
+    }
+
+    @Test
+    void revertirPorVenta_no_toca_un_alquiler_que_ya_estaba_devuelto() {
+        Alquiler alquiler = new Alquiler(lavadora, venta, "Juan", 3);
+        alquiler.marcarDevuelto();
+        var fechaOriginal = alquiler.getFechaDevolucion();
+        when(alquilerRepository.findByVentaId(1L)).thenReturn(List.of(alquiler));
+
+        alquilerService.revertirPorVenta(1L);
+
+        assertThat(alquiler.getFechaDevolucion()).isEqualTo(fechaOriginal);
+    }
+
+    @Test
+    void revertirPorVenta_sin_alquileres_no_hace_nada() {
+        when(alquilerRepository.findByVentaId(1L)).thenReturn(List.of());
+
+        alquilerService.revertirPorVenta(1L); // no deberia lanzar
+    }
+
+    // ------------------------------------------------------------------
+    //  historial
+    // ------------------------------------------------------------------
+
+    @Test
+    void historial_consulta_los_devueltos_del_rango() {
+        LocalDate desde = LocalDate.of(2026, 9, 1);
+        LocalDate hasta = LocalDate.of(2026, 9, 10);
+        when(alquilerRepository.findByEstadoAndFechaDevolucionBetweenOrderByFechaDevolucionDesc(
+                EstadoAlquiler.DEVUELTO, desde.atStartOfDay(), hasta.plusDays(1).atStartOfDay()))
+                .thenReturn(List.of());
+
+        assertThat(alquilerService.historial(desde, hasta)).isEmpty();
+    }
+
+    @Test
+    void historial_con_hasta_anterior_a_desde_lanza_IllegalArgument() {
+        assertThatThrownBy(() -> alquilerService.historial(
+                LocalDate.of(2026, 9, 10), LocalDate.of(2026, 9, 1)))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

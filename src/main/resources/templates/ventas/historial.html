@@ -49,7 +49,10 @@
             <td class="num" th:text="${v.numero}">0</td>
             <td th:text="${#temporals.format(v.fecha, 'dd/MM/yyyy HH:mm')}">-</td>
             <td class="num" th:text="${v.totalUnidades}">0</td>
-            <td th:text="${v.formaPago.etiqueta}">-</td>
+            <td>
+                <span th:text="${v.formaPago.etiqueta}">-</span>
+                <span class="etiqueta etiqueta-salida" th:if="${v.estado.name() == 'ANULADA'}">Anulada</span>
+            </td>
             <td class="num" th:text="${#numbers.formatDecimal(v.total, 1, 'POINT', 0, 'COMMA')}">0</td>
             <td class="acciones">
                 <a class="boton-mini" th:href="@{/ventas/{id}(id=${v.id})}">Ver</a>

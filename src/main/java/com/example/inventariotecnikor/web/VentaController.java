@@ -250,6 +250,25 @@ public class VentaController {
         return "redirect:/ventas/" + id;
     }
 
+    /**
+     * Anula la venta: devuelve el stock de los repuestos y libera la
+     * lavadora si genero un alquiler que siga activo. No borra nada, queda
+     * marcada como ANULADA con el motivo a la vista.
+     */
+    @PostMapping("/ventas/{id}/anular")
+    public String anular(@PathVariable Long id,
+                         @RequestParam String motivo,
+                         @RequestParam(required = false) String responsable,
+                         RedirectAttributes flash) {
+        try {
+            Venta venta = ventaService.anular(id, motivo, responsable);
+            flash.addFlashAttribute("mensajeExito", "Venta #" + venta.getNumero() + " anulada.");
+        } catch (IllegalArgumentException ex) {
+            flash.addFlashAttribute("mensajeError", ex.getMessage());
+        }
+        return "redirect:/ventas/" + id;
+    }
+
     /** Historial de ventas de un rango de fechas (un solo dia si no se pasa "hasta"). */
     @GetMapping("/ventas")
     public String historial(@RequestParam(required = false)

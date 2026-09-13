@@ -10,6 +10,7 @@ import com.example.inventariotecnikor.repository.AlquilerRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -68,8 +69,38 @@ public class AlquilerService {
         if (alquiler.getEstado() == EstadoAlquiler.DEVUELTO) {
             throw new IllegalArgumentException("Este alquiler ya estaba marcado como devuelto.");
         }
+        devolver(alquiler);
+        return alquiler;
+    }
+
+    /**
+     * Deshace los prestamos que genero una venta (la usa VentaService.anular):
+     * si siguen activos, la lavadora vuelve a estar disponible. Uno ya
+     * devuelto de antes se deja tal cual.
+     */
+    @Transactional
+    public void revertirPorVenta(Long ventaId) {
+        for (Alquiler alquiler : alquilerRepository.findByVentaId(ventaId)) {
+            if (alquiler.getEstado() == EstadoAlquiler.ACTIVO) {
+                devolver(alquiler);
+            }
+        }
+    }
+
+    /** Prestamos ya devueltos en un rango de fechas (por cuando volvieron), del mas reciente al mas antiguo. */
+    public List<Alquiler> historial(LocalDate desde, LocalDate hasta) {
+        if (desde == null || hasta == null) {
+            throw new IllegalArgumentException("Faltan las fechas del rango.");
+        }
+        if (hasta.isBefore(desde)) {
+            throw new IllegalArgumentException("La fecha \"hasta\" no puede ser anterior a \"desde\".");
+        }
+        return alquilerRepository.findByEstadoAndFechaDevolucionBetweenOrderByFechaDevolucionDesc(
+                EstadoAlquiler.DEVUELTO, desde.atStartOfDay(), hasta.plusDays(1).atStartOfDay());
+    }
+
+    private void devolver(Alquiler alquiler) {
         alquiler.marcarDevuelto();
         alquiler.getLavadora().setEstado(EstadoLavadora.DISPONIBLE);
-        return alquiler;
     }
 }

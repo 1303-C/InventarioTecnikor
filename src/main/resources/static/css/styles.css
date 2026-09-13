@@ -157,6 +157,8 @@ tbody tr:hover { background: #f5f8fb; }
 .num { text-align: right; font-variant-numeric: tabular-nums; }
 .mono { font-family: "Consolas", "Courier New", monospace; font-size: 0.85rem; }
 .stock-bajo { color: var(--color-alerta); font-weight: 700; }
+tr.fila-alerta { background: var(--color-error-fondo); }
+tr.fila-alerta:hover { background: #f9dedb; }
 
 .acciones { display: flex; gap: 8px; align-items: center; }
 .acciones form { margin: 0; }

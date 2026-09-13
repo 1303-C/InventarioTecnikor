@@ -11,6 +11,13 @@
         <a class="boton" th:href="@{/ventas/nueva}">Nueva venta</a>
     </div>
 
+    <p class="alerta alerta-error" th:if="${venta.estado.name() == 'ANULADA'}">
+        <strong>Venta anulada</strong>
+        el <span th:text="${#temporals.format(venta.fechaAnulacion, 'dd/MM/yyyy HH:mm')}">-</span>
+        <span th:if="${venta.anuladoPor}"> por <span th:text="${venta.anuladoPor}">-</span></span>.
+        Motivo: <span th:text="${venta.motivoAnulacion}">-</span>
+    </p>
+
     <dl class="detalle-datos">
         <dt>Fecha</dt>
         <dd th:text="${#temporals.format(venta.fecha, 'dd/MM/yyyy HH:mm')}">-</dd>
@@ -63,6 +70,26 @@
         </form>
         <a th:href="@{/ventas}">← Historial de ventas</a>
     </div>
+
+    <details class="plegable" th:if="${venta.estado.name() != 'ANULADA'}" style="margin-top:12px">
+        <summary>Anular esta venta</summary>
+        <p class="ayuda">
+            Devuelve el stock de los repuestos y, si genero un alquiler activo, libera la lavadora.
+        </p>
+        <form class="formulario" method="post" th:action="@{/ventas/{id}/anular(id=${venta.id})}"
+              onsubmit="return confirm('¿Anular la venta #' + [[${venta.numero}]] + '? Esto no se puede deshacer.');">
+            <div class="campo">
+                <label for="motivoAnulacion">Motivo</label>
+                <input type="text" id="motivoAnulacion" name="motivo" maxlength="200" required
+                       placeholder="Ej. cobro por error, el cliente devolvio el repuesto...">
+            </div>
+            <div class="campo">
+                <label for="responsableAnulacion">Responsable</label>
+                <input type="text" id="responsableAnulacion" name="responsable" placeholder="Quien anula">
+            </div>
+            <button type="submit" class="boton boton-peligro">Anular venta</button>
+        </form>
+    </details>
 </section>
 </body>
 </html>

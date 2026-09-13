@@ -83,6 +83,11 @@ public class Alquiler {
         this.fechaFinEstimada = this.fechaInicio.plusHours(horas);
     }
 
+    /** Sigue activo y ya paso la hora en que deberia haber vuelto. */
+    public boolean estaVencido() {
+        return estado == EstadoAlquiler.ACTIVO && fechaFinEstimada.isBefore(LocalDateTime.now());
+    }
+
     /** Marca la lavadora como devuelta ahora mismo. */
     public void marcarDevuelto() {
         this.estado = EstadoAlquiler.DEVUELTO;

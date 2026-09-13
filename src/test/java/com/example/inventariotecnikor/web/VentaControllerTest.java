@@ -174,6 +174,29 @@ class VentaControllerTest {
     }
 
     @Test
+    void post_anular_anula_la_venta_y_avisa() throws Exception {
+        when(ventaService.anular(55L, "cobro por error", "Ana")).thenReturn(venta(55, 9, FormaPago.TARJETA));
+
+        mvc.perform(post("/ventas/55/anular")
+                        .param("motivo", "cobro por error")
+                        .param("responsable", "Ana"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/ventas/55"))
+                .andExpect(flash().attributeExists("mensajeExito"));
+    }
+
+    @Test
+    void post_anular_con_error_de_negocio_avisa_del_error() throws Exception {
+        when(ventaService.anular(any(), any(), any()))
+                .thenThrow(new IllegalArgumentException("La venta #9 ya estaba anulada."));
+
+        mvc.perform(post("/ventas/55/anular").param("motivo", "x"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/ventas/55"))
+                .andExpect(flash().attributeExists("mensajeError"));
+    }
+
+    @Test
     void get_historial_lista_las_ventas_del_rango() throws Exception {
         when(ventaService.ventasEnRango(any(), any())).thenReturn(List.of());
 

@@ -3,6 +3,7 @@ package com.example.inventariotecnikor.service;
 import com.example.inventariotecnikor.exception.RecursoNoEncontradoException;
 import com.example.inventariotecnikor.exception.StockInsuficienteException;
 import com.example.inventariotecnikor.model.Categoria;
+import com.example.inventariotecnikor.model.EstadoVenta;
 import com.example.inventariotecnikor.model.FormaPago;
 import com.example.inventariotecnikor.model.Lavadora;
 import com.example.inventariotecnikor.model.PlanAlquiler;
@@ -67,8 +68,10 @@ class VentaServiceTest {
     void setUp() {
         bomba = new Producto("LAV-001", "Bomba de agua", Categoria.LAVADORA, 2);
         bomba.setPrecioVenta(new BigDecimal("100.00"));
+        set(bomba, "id", 1L);
         correa = new Producto("LAV-002", "Correa", Categoria.LAVADORA, 5);
         correa.setPrecioVenta(new BigDecimal("25.50"));
+        set(correa, "id", 2L);
     }
 
     private void stubBomba() {
@@ -406,6 +409,72 @@ class VentaServiceTest {
         assertThatThrownBy(() -> ventaService.registrar(List.of(), List.of(libre),
                 FormaPago.TARJETA, null, "Carlos", null, null))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    // ------------------------------------------------------------------
+    //  Anular venta
+    // ------------------------------------------------------------------
+
+    @Test
+    void anular_devuelve_el_stock_de_las_lineas_de_producto() {
+        stubBomba();
+        stubRepoVentas();
+        Venta venta = ventaService.registrar(
+                List.of(new VentaService.LineaSolicitada(1L, 2)), List.of(),
+                FormaPago.TARJETA, null, "Carlos", null, null);
+        set(venta, "id", 5L);
+        when(ventaRepository.findById(5L)).thenReturn(Optional.of(venta));
+
+        Venta anulada = ventaService.anular(5L, "cobro por error", "Ana");
+
+        assertThat(anulada.getEstado()).isEqualTo(EstadoVenta.ANULADA);
+        assertThat(anulada.getMotivoAnulacion()).isEqualTo("cobro por error");
+        assertThat(anulada.getAnuladoPor()).isEqualTo("Ana");
+        verify(movimientoService).registrarEntrada(1L, 2, "Anulacion Venta #1", "Ana");
+    }
+
+    @Test
+    void anular_libera_las_lavadoras_de_los_alquileres_que_genero() {
+        stubRepoVentas();
+        Lavadora lavadora = lavadora(9, "PEQ-01");
+        when(alquilerService.lavadoraDisponible(9L)).thenReturn(lavadora);
+        var libre = new VentaService.LineaLibreSolicitada(
+                TipoLinea.ALQUILER, "Alquiler PEQ-01", 3, new BigDecimal("5000"), 9L, "Juan");
+        Venta venta = ventaService.registrar(List.of(), List.of(libre),
+                FormaPago.EFECTIVO, new BigDecimal("15000"), "Carlos", null, null);
+        set(venta, "id", 5L);
+        when(ventaRepository.findById(5L)).thenReturn(Optional.of(venta));
+
+        ventaService.anular(5L, "el cliente no se la llevo", "Ana");
+
+        verify(alquilerService).revertirPorVenta(5L);
+    }
+
+    @Test
+    void anular_sin_motivo_lanza_IllegalArgument_y_no_toca_nada() {
+        assertThatThrownBy(() -> ventaService.anular(5L, "  ", "Ana"))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        verifyNoInteractions(movimientoService, alquilerService);
+    }
+
+    @Test
+    void anular_una_venta_ya_anulada_lanza_IllegalArgument() {
+        Venta venta = new Venta(1, FormaPago.TARJETA, "Carlos");
+        venta.anular("primera anulacion", "Ana");
+        set(venta, "id", 5L);
+        when(ventaRepository.findById(5L)).thenReturn(Optional.of(venta));
+
+        assertThatThrownBy(() -> ventaService.anular(5L, "segundo intento", "Ana"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void anular_una_venta_inexistente_lanza_RecursoNoEncontrado() {
+        when(ventaRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> ventaService.anular(99L, "motivo", "Ana"))
+                .isInstanceOf(RecursoNoEncontradoException.class);
     }
 
     // ------------------------------------------------------------------
