@@ -99,7 +99,10 @@ public class EscPosTicketBuilder {
 
             escpos.feed(1);
             escpos.writeLF(centrado, "Gracias por su compra");
-            escpos.feed(3);
+            escpos.writeLF(centrado, "Vuelva pronto");
+            // La cuchilla necesita un margen minimo de papel en blanco antes
+            // de cortar; con menos, corta pegado a "Vuelva pronto".
+            escpos.feed(6);
 
             if (ticket.isCortar()) {
                 escpos.cut(CutMode.FULL);

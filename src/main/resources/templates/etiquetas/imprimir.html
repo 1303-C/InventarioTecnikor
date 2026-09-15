@@ -3,16 +3,25 @@
   Pagina de impresion de etiquetas. NO usa el layout (nada de menu ni pie):
   es solo las etiquetas. Al cargar lanza el dialogo de impresion.
 
-  El tamano de cada etiqueta y de la "pagina" (@page) se arma con los mm que
-  llegan por parametro, usando th:inline="css".
+  Cada "fila" (una por pagina/hoja fisica del rollo) trae hasta "porFila"
+  celdas de "ancho" x "alto" mm, colocadas una al lado de otra con
+  "margenMm" en los bordes y "espacioMm" entre ellas -- igual a como esta
+  troquelado el rollo. Con porFila=1 (el caso de siempre) es una sola
+  celda por fila, identico a como funcionaba antes.
+
+  El QR se dimensiona como el menor entre "el alto disponible" y "un 45%
+  del ancho de la celda": asi en etiquetas angostas el QR no se come todo
+  el ancho y le deja sitio de verdad al texto.
 -->
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:with="qrMm=${T(java.lang.Math).min((alto - 2) * 1.0, ancho * 0.45)},
+               anchoTotal=${porFila * ancho + (porFila - 1) * espacioMm + 2 * margenMm}">
 <head>
     <meta charset="UTF-8">
     <title>Etiquetas para imprimir</title>
     <style th:inline="css">
         @page {
-            size: [[${ancho}]]mm [[${alto}]]mm;
+            size: [[${anchoTotal}]]mm [[${alto}]]mm;
             margin: 0;
         }
         * { box-sizing: border-box; }
@@ -39,23 +48,31 @@
         .hoja {
             padding: 16px;
             display: flex;
-            flex-wrap: wrap;
+            flex-direction: column;
             gap: 6px;
         }
-        .etiqueta {
-            width: [[${ancho}]]mm;
+        .fila {
+            position: relative;
+            width: [[${anchoTotal}]]mm;
             height: [[${alto}]]mm;
             background: #fff;
             border: 1px solid #bbb;
-            padding: 2mm;
+        }
+        .etiqueta {
+            position: absolute;
+            top: 0;
+            width: [[${ancho}]]mm;
+            height: [[${alto}]]mm;
+            padding: 1mm;
             display: flex;
             align-items: center;
-            gap: 2mm;
+            gap: 1mm;
             overflow: hidden;
         }
         .etiqueta img {
-            height: calc([[${alto}]]mm - 4mm);
-            width: auto;
+            height: [[${qrMm}]]mm;
+            width: [[${qrMm}]]mm;
+            flex-shrink: 0;
         }
         .etiqueta-datos {
             flex: 1;
@@ -63,12 +80,12 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            gap: 1mm;
+            gap: 0.5mm;
         }
         .etiqueta-nombre {
-            font-size: 2.4mm;
+            font-size: 1.6mm;
             font-weight: 700;
-            line-height: 1.1;
+            line-height: 1.15;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
@@ -76,15 +93,24 @@
         }
         .etiqueta-codigo {
             font-family: "Consolas", monospace;
-            font-size: 2.1mm;
+            font-size: 1.4mm;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
-        .etiqueta-precio { font-size: 2.6mm; font-weight: 700; }
+        .etiqueta-precio {
+            font-size: 1.8mm;
+            font-weight: 700;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
 
         @media print {
             body { background: #fff; }
             .barra { display: none; }
             .hoja { padding: 0; gap: 0; }
-            .etiqueta {
+            .fila {
                 border: 0;
                 page-break-after: always;
                 break-after: page;
@@ -95,15 +121,16 @@
 <body onload="window.print()">
 
 <div class="barra">
-    <span th:text="'Etiquetas: ' + ${#lists.size(productos)} + ' producto(s) x ' + ${copias} + ' copia(s) — ' + ${ancho} + 'x' + ${alto} + ' mm'">
+    <span th:text="'Etiquetas: ' + ${cantidadUnidades} + ' unidad(es) — ' + ${porFila} + ' por fila — celda ' + ${ancho} + 'x' + ${alto} + ' mm'">
         Etiquetas
     </span>
     <button type="button" onclick="window.print()">Imprimir de nuevo</button>
 </div>
 
 <div class="hoja">
-    <th:block th:each="p : ${productos}">
-        <div class="etiqueta" th:each="c : ${#numbers.sequence(1, copias)}">
+    <div class="fila" th:each="fila : ${filas}">
+        <div class="etiqueta" th:each="p, i : ${fila}"
+             th:style="${'left: ' + (margenMm + i.index * (ancho + espacioMm)) + 'mm'}">
             <img th:src="@{/productos/{id}/qr.png(id=${p.id})}" alt="QR">
             <div class="etiqueta-datos">
                 <span class="etiqueta-nombre" th:text="${p.nombre}">Nombre del producto</span>
@@ -113,7 +140,7 @@
                       th:text="'$ ' + ${#numbers.formatDecimal(p.precioVenta, 1, 'POINT', 0, 'COMMA')}">$ 0</span>
             </div>
         </div>
-    </th:block>
+    </div>
 </div>
 
 </body>

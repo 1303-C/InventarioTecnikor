@@ -92,6 +92,7 @@ class EscPosTicketBuilderTest {
         assertThat(txt).contains("Correa");
         assertThat(txt).contains("TOTAL");
         assertThat(txt).contains("Gracias por su compra");
+        assertThat(txt).contains("Vuelva pronto");
     }
 
     @Test

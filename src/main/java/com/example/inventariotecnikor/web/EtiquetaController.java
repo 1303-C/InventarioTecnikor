@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -54,28 +55,62 @@ public class EtiquetaController {
 
     /**
      * Pagina lista para imprimir: cada producto repetido "copias" veces,
-     * cada etiqueta con el tamano en mm que se indique (por defecto 50x30).
+     * cada etiqueta con el tamano en mm que se indique (por defecto 25x18,
+     * el tamano real del rollo de la Bixolon en el mostrador).
      * Se abre en una pestana nueva y lanza el dialogo de impresion sola.
+     *
+     * "porFila" es cuantas etiquetas trae el rollo una al lado de la otra
+     * (1 = una sola columna, como antes; 3 = el rollo actual del mostrador,
+     * con "margenMm" a cada borde y "espacioMm" entre etiquetas). El
+     * cabezal de la impresora es una barra fija de ancho completo: si el
+     * rollo trae varias columnas, hay que mandarle TODAS juntas en una
+     * misma "pagina" del ancho total, o las de los costados quedan en
+     * blanco (eso es justo lo que se ve si porFila=1 en un rollo de 3).
      */
     @GetMapping("/etiquetas/imprimir")
     public String imprimir(@RequestParam(required = false) List<Long> ids,
                            @RequestParam(defaultValue = "1") int copias,
-                           @RequestParam(defaultValue = "50") int ancho,
-                           @RequestParam(defaultValue = "30") int alto,
+                           @RequestParam(defaultValue = "25") int ancho,
+                           @RequestParam(defaultValue = "18") int alto,
+                           @RequestParam(defaultValue = "1") int porFila,
+                           @RequestParam(defaultValue = "0") double margenMm,
+                           @RequestParam(defaultValue = "0") double espacioMm,
                            Model model) {
 
         if (ids == null || ids.isEmpty()) {
             return "redirect:/etiquetas";
         }
 
-        List<Producto> productos = ids.stream()
-                .map(productoService::obtenerPorId)
-                .toList();
+        int anchoValido = Math.max(10, ancho);
+        int altoValido = Math.max(10, alto);
+        int filaValida = Math.max(1, porFila);
+        int copiasValidas = Math.max(1, copias);
 
-        model.addAttribute("productos", productos);
-        model.addAttribute("copias", Math.max(1, copias));
-        model.addAttribute("ancho", Math.max(10, ancho));
-        model.addAttribute("alto", Math.max(10, alto));
+        // Expande a la lista plana de unidades (cada producto repetido
+        // "copias" veces) y la agrupa de a "porFila" para armar las filas
+        // fisicas del rollo. Si el total no es multiplo de porFila, la
+        // ultima fila queda con menos celdas (las que sobran del rollo
+        // quedan en blanco, no hay forma de evitarlo).
+        List<Producto> unidades = new ArrayList<>();
+        for (Long id : ids) {
+            Producto producto = productoService.obtenerPorId(id);
+            for (int i = 0; i < copiasValidas; i++) {
+                unidades.add(producto);
+            }
+        }
+        List<List<Producto>> filas = new ArrayList<>();
+        for (int i = 0; i < unidades.size(); i += filaValida) {
+            filas.add(unidades.subList(i, Math.min(i + filaValida, unidades.size())));
+        }
+
+        model.addAttribute("filas", filas);
+        model.addAttribute("cantidadUnidades", unidades.size());
+        model.addAttribute("copias", copiasValidas);
+        model.addAttribute("ancho", anchoValido);
+        model.addAttribute("alto", altoValido);
+        model.addAttribute("porFila", filaValida);
+        model.addAttribute("margenMm", margenMm);
+        model.addAttribute("espacioMm", espacioMm);
         return "etiquetas/imprimir";
     }
 }

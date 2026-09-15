@@ -14,20 +14,35 @@
 
     <form method="get" th:action="@{/etiquetas/imprimir}" target="_blank">
 
-        <div class="fila-3" style="max-width:520px; margin-bottom:16px">
+        <div class="fila-3" style="max-width:520px; margin-bottom:8px">
             <div class="campo">
                 <label for="copias">Etiquetas por producto</label>
                 <input type="number" id="copias" name="copias" value="1" min="1">
             </div>
             <div class="campo">
-                <label for="ancho">Ancho (mm)</label>
-                <input type="number" id="ancho" name="ancho" value="50" min="10">
+                <label for="ancho">Ancho de una etiqueta (mm)</label>
+                <input type="number" id="ancho" name="ancho" value="25" min="10">
             </div>
             <div class="campo">
                 <label for="alto">Alto (mm)</label>
-                <input type="number" id="alto" name="alto" value="30" min="10">
+                <input type="number" id="alto" name="alto" value="18" min="10">
             </div>
         </div>
+
+        <div class="campo" style="max-width:520px; margin-bottom:16px">
+            <label>
+                <input type="checkbox" id="rolloTresPorFila">
+                El rollo trae 3 etiquetas una al lado de otra (mostrador)
+            </label>
+            <span class="ayuda">
+                El cabezal imprime todo el ancho del rollo de una vez: si esto no esta
+                marcado en un rollo de 3, solo se usa la columna izquierda y las otras
+                dos quedan en blanco.
+            </span>
+        </div>
+        <input type="hidden" id="porFila" name="porFila" value="1">
+        <input type="hidden" id="margenMm" name="margenMm" value="0">
+        <input type="hidden" id="espacioMm" name="espacioMm" value="0">
 
         <p class="vacio" th:if="${productos.isEmpty()}">No hay productos activos.</p>
 
@@ -58,6 +73,14 @@
     <script>
         document.getElementById('todos')?.addEventListener('change', function (e) {
             document.querySelectorAll('.chk-etiqueta').forEach(c => c.checked = e.target.checked);
+        });
+
+        // Rollo de 3 etiquetas por fila del mostrador: 5mm de margen en los
+        // bordes y 5mm entre etiquetas (total = 3x25 + 2x5 + 2x5 = 95mm).
+        document.getElementById('rolloTresPorFila')?.addEventListener('change', function (e) {
+            document.getElementById('porFila').value = e.target.checked ? '3' : '1';
+            document.getElementById('margenMm').value = e.target.checked ? '5' : '0';
+            document.getElementById('espacioMm').value = e.target.checked ? '5' : '0';
         });
     </script>
 </section>
