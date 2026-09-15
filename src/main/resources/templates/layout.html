@@ -20,7 +20,9 @@
     <!-- se sustituye por el <title> de la pagina concreta -->
     <title th:replace="${titulo}">Inventario Tecnikor</title>
     <link rel="icon" type="image/jpeg" th:href="@{/img/logo-tecnikor.jpg}">
-    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <!-- "v" cambia cada vez que arranca la app: obliga al navegador a
+         pedir el CSS de nuevo en vez de usar una copia vieja en cache. -->
+    <link rel="stylesheet" th:href="@{/css/styles.css(v=${@arranque.marca})}">
 </head>
 <body>
 
@@ -56,6 +58,10 @@
 
 <footer class="pie">
     <span>Inventario Tecnikor · repuestos de linea blanca</span>
+    <span class="pie-creditos">
+        <img th:src="@{/img/logo-redsoul.png}" alt="RedSoul Dev Studio">
+        Desarrollado por <strong>RedSoul Dev Studio</strong> · Tecnología con alma.
+    </span>
 </footer>
 
 </body>

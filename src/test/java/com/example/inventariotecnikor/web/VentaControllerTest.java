@@ -42,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 @WebMvcTest(VentaController.class)
-@Import(CarritoVenta.class)
+@Import({CarritoVenta.class, com.example.inventariotecnikor.config.MarcaDeArranque.class})
 class VentaControllerTest {
 
     @Autowired

@@ -289,8 +289,25 @@ input[readonly] { background: #f0f2f5; color: var(--color-texto-suave); }
     text-align: center;
     color: var(--color-texto-suave);
     font-size: 0.82rem;
-    padding: 32px 0 24px;
+    padding: 18px 0 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
 }
+.pie-creditos {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    color: var(--color-texto-suave);
+}
+.pie-creditos img {
+    height: 14px;
+    width: auto;
+    flex-shrink: 0;
+}
+.pie-creditos strong { color: var(--tk-navy); }
 
 /* ---------- Botones entrada / salida ---------- */
 .boton-entrada { background: var(--color-exito-texto); }
