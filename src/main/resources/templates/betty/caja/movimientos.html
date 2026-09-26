@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{betty/layout-betty :: main(~{::title}, ~{::section})}">
+<head>
+    <title>Movimientos · Betty</title>
+</head>
+<body>
+<section>
+    <div class="fila-titulo" style="margin-bottom:1rem">
+        <h1 style="color:#8B1A6B">Movimientos de Caja</h1>
+        <a class="boton-secundario" th:href="@{/betty/caja}">&#x2190; Cierre de caja</a>
+    </div>
+
+    <!-- Filtro -->
+    <form method="get" th:action="@{/betty/caja/movimientos}"
+          style="display:flex;gap:1rem;align-items:flex-end;margin-bottom:1.5rem;flex-wrap:wrap">
+        <div class="campo">
+            <label for="desde">Desde</label>
+            <input type="date" id="desde" name="desde" th:value="${desde}">
+        </div>
+        <div class="campo">
+            <label for="hasta">Hasta</label>
+            <input type="date" id="hasta" name="hasta" th:value="${hasta}">
+        </div>
+        <button type="submit" class="boton">Filtrar</button>
+    </form>
+
+    <div th:if="${cierre.movimientos().isEmpty()}" style="color:#aaa;font-size:.9rem">
+        No hay movimientos en el periodo.
+    </div>
+
+    <table th:unless="${cierre.movimientos().isEmpty()}" style="width:100%;border-collapse:collapse">
+        <thead>
+        <tr style="background:#f8f0f5;border-bottom:2px solid #C2185B">
+            <th style="padding:.6rem;text-align:left">Fecha</th>
+            <th style="padding:.6rem;text-align:left">Tipo</th>
+            <th style="padding:.6rem;text-align:left">Motivo</th>
+            <th style="padding:.6rem;text-align:left">Responsable</th>
+            <th style="padding:.6rem;text-align:right">Monto</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="m : ${cierre.movimientos()}" style="border-bottom:1px solid #f0e0f0">
+            <td style="padding:.5rem" th:text="${#temporals.format(m.fecha, 'dd/MM HH:mm')}">--</td>
+            <td style="padding:.5rem">
+                <span th:text="${m.tipo}"
+                      th:style="${'INGRESO'.equals(m.tipo)} ? 'color:#2e7d32;font-weight:700' : 'color:#e53935;font-weight:700'">
+                    INGRESO
+                </span>
+            </td>
+            <td style="padding:.5rem" th:text="${m.motivo}">--</td>
+            <td style="padding:.5rem" th:text="${m.responsable ?: '-'}">--</td>
+            <td style="padding:.5rem;text-align:right;font-weight:700"
+                th:text="'$ ' + ${#numbers.formatDecimal(m.monto, 1, 'POINT', 0, 'COMMA')}">$ 0</td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+</body>
+</html>

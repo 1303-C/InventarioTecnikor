@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<!--
+  Layout base de Betty.
+  Cada plantilla hace:
+    th:replace="~{betty/layout-betty :: main(~{::title}, ~{::section})}"
+-->
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:fragment="main(titulo, contenido)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:replace="${titulo}">Betty</title>
+    <link rel="icon" type="image/png" th:href="@{/img/logo-betty.png}">
+    <link rel="stylesheet" th:href="@{/css/styles.css(v=${@arranque.marca})}">
+    <style>
+        .betty-topbar {
+            background: linear-gradient(90deg, #5a0a45 0%, #8B1A6B 50%, #C2185B 100%);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .betty-marca {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            text-decoration: none;
+            color: #fff;
+        }
+        .betty-marca-titulo {
+            font-size: 1.3rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+        }
+        .betty-marca-subtitulo {
+            font-size: 0.78rem;
+            opacity: 0.8;
+            font-weight: 300;
+            display: block;
+        }
+        .betty-nav {
+            display: flex;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .betty-nav a {
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            font-size: 0.85rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            transition: background 0.15s;
+            white-space: nowrap;
+        }
+        .betty-nav a:hover {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+        }
+        .betty-nav a.selector-link {
+            border: 1px solid rgba(255,255,255,0.4);
+            font-weight: 600;
+        }
+        .betty-main {
+            padding: 1.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .betty-footer {
+            margin-top: 2rem;
+            padding: 1rem 1.5rem;
+            background: #f8f0f5;
+            border-top: 2px solid #C2185B;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+<header class="betty-topbar">
+    <a class="betty-marca" th:href="@{/betty/pos}">
+        <img th:src="@{/img/logo-betty.png}" alt="Betty" style="height:52px;width:auto;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.4))">
+        <span>
+            <span class="betty-marca-titulo">Betty</span>
+            <span class="betty-marca-subtitulo">Belleza y Cuidado</span>
+        </span>
+    </a>
+    <nav class="betty-nav">
+        <a th:href="@{/betty/pos}">&#x1F6D2; POS</a>
+        <a th:href="@{/betty/ventas}">&#x1F4CB; Ventas</a>
+        <a th:href="@{/betty/caja}">&#x1F4B0; Caja</a>
+        <a th:href="@{/betty/admin/productos}">Productos</a>
+        <a th:href="@{/betty/admin/fragancias}">Fragancias</a>
+        <a th:href="@{/betty/admin/precios-perfume}">Precios Perfume</a>
+        <a th:href="@{/betty/admin/triple-a}">Triple A</a>
+        <a th:href="@{/}" class="selector-link">&#x21C4; Tecnikor</a>
+    </nav>
+</header>
+
+<div class="betty-main">
+    <div class="alerta alerta-exito" th:if="${mensajeExito}" th:text="${mensajeExito}"></div>
+    <div class="alerta alerta-error" th:if="${mensajeError}" th:text="${mensajeError}"></div>
+
+    <div th:replace="${contenido}">Contenido</div>
+</div>
+
+<footer class="betty-footer">
+    <span>Betty · Belleza y Cuidado &nbsp;&middot;&nbsp; Sistema de Punto de Venta</span>
+    <span class="pie-creditos" style="display:flex;align-items:center;justify-content:center;gap:0.4rem;margin-top:0.3rem">
+        <img th:src="@{/img/logo-redsoul.png}" alt="RedSoul Dev Studio" style="height:16px">
+        Desarrollado por <strong>RedSoul Dev Studio</strong> · Tecnología con alma.
+    </span>
+</footer>
+
+</body>
+</html>

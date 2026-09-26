@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{betty/layout-betty :: main(~{::title}, ~{::section})}">
+<head>
+    <title>POS · Betty</title>
+</head>
+<body>
+<section>
+    <style>
+        .betty-pos { display: grid; grid-template-columns: 1fr 420px; gap: 1.5rem; }
+        @media (max-width: 900px) { .betty-pos { grid-template-columns: 1fr; } }
+
+        .betty-tabs { display: flex; gap: 0; border-bottom: 2px solid #C2185B; margin-bottom: 1rem; }
+        .betty-tab {
+            padding: 0.5rem 1.2rem; cursor: pointer; border: none; background: none;
+            font-size: 0.9rem; font-weight: 600; color: #888; border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+        .betty-tab.activo { color: #C2185B; border-bottom-color: #C2185B; }
+        .betty-panel { display: none; }
+        .betty-panel.activo { display: block; }
+
+        .productos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 0.6rem;
+            max-height: 460px;
+            overflow-y: auto;
+            padding-right: 0.25rem;
+        }
+        .producto-card {
+            border: 1px solid #e0d0e8;
+            border-radius: 10px;
+            padding: 0.75rem;
+            background: #fdf7fc;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        .producto-card .nombre { font-size: 0.88rem; font-weight: 600; color: #3a0030; }
+        .producto-card .precio { font-size: 0.95rem; color: #C2185B; font-weight: 700; }
+        .producto-card button {
+            margin-top: auto;
+            background: #C2185B; color: #fff; border: none; border-radius: 6px;
+            padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: pointer;
+        }
+        .producto-card button:hover { background: #8B1A6B; }
+
+        #lista-fragancias li:hover { background:#fdf0f8; color:#C2185B; }
+        #lista-fragancias li::-webkit-scrollbar { width:5px; }
+        #lista-fragancias::-webkit-scrollbar { width:5px; }
+        #lista-fragancias::-webkit-scrollbar-thumb { background:#d0a0c8; border-radius:3px; }
+
+        /* Perfumes form */
+        .perfume-form { display: flex; flex-direction: column; gap: 0.8rem; max-width: 400px; }
+        .perfume-form label { font-size: 0.85rem; font-weight: 600; color: #5a0a45; margin-bottom: 2px; display: block; }
+        .perfume-form select, .perfume-form input {
+            width: 100%; padding: 0.45rem 0.7rem; border: 1px solid #d0a0c8;
+            border-radius: 8px; font-size: 0.9rem;
+        }
+        .precio-perfume-display {
+            background: #fdf0f8; border: 1px solid #C2185B; border-radius: 8px;
+            padding: 0.5rem 0.9rem; font-weight: 700; color: #C2185B;
+            font-size: 1.05rem; min-height: 2.2rem;
+        }
+        .btn-betty {
+            background: linear-gradient(90deg, #8B1A6B, #C2185B);
+            color: #fff; border: none; border-radius: 8px;
+            padding: 0.55rem 1.2rem; font-size: 0.9rem; font-weight: 600;
+            cursor: pointer; width: 100%;
+        }
+        .btn-betty:hover { opacity: 0.9; }
+
+        /* Carrito */
+        .betty-carrito { background: #fff; border: 1px solid #e0d0e8; border-radius: 14px; padding: 1.2rem; }
+        .betty-carrito h3 { color: #8B1A6B; font-size: 1.1rem; margin-bottom: 0.8rem; }
+        .betty-carrito table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .betty-carrito th { text-align: left; color: #888; font-weight: 600; padding: 0.3rem 0.4rem; border-bottom: 1px solid #eee; }
+        .betty-carrito td { padding: 0.4rem; vertical-align: middle; border-bottom: 1px solid #f5f0f8; }
+        .betty-carrito .num { text-align: right; }
+        .betty-total {
+            margin-top: 1rem; padding: 0.8rem 0;
+            border-top: 2px solid #C2185B;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .betty-total span { font-size: 1rem; color: #666; }
+        .betty-total strong { font-size: 1.6rem; color: #C2185B; }
+        .betty-cobro { display: flex; gap: 0.7rem; margin-top: 1rem; }
+        .btn-efectivo {
+            flex: 1; background: #2e7d32; color: #fff; border: none; border-radius: 10px;
+            padding: 0.8rem; font-size: 1rem; font-weight: 700; cursor: pointer;
+        }
+        .btn-efectivo:hover { background: #1b5e20; }
+        .btn-transfer {
+            flex: 1; background: #1565c0; color: #fff; border: none; border-radius: 10px;
+            padding: 0.8rem; font-size: 1rem; font-weight: 700; cursor: pointer;
+        }
+        .btn-transfer:hover { background: #0d47a1; }
+        .btn-quitar {
+            background: #e53935; color: #fff; border: none; border-radius: 5px;
+            padding: 0.2rem 0.5rem; font-size: 0.75rem; cursor: pointer;
+        }
+        .carrito-vacio { text-align: center; color: #bbb; padding: 2rem 0; font-size: 0.9rem; }
+    </style>
+
+    <div class="fila-titulo" style="margin-bottom:1rem">
+        <h1 style="color:#8B1A6B">Punto de Venta · Betty</h1>
+    </div>
+
+    <div class="betty-pos">
+        <!-- Columna izquierda: pestanas de productos -->
+        <div>
+            <div class="betty-tabs">
+                <button class="betty-tab activo" onclick="cambiarTab('general', this)">General</button>
+                <button class="betty-tab" onclick="cambiarTab('perfumes', this)">Perfumes</button>
+                <button class="betty-tab" onclick="cambiarTab('triplea', this)">Triple A</button>
+            </div>
+
+            <!-- Tab General -->
+            <div id="tab-general" class="betty-panel activo">
+                <input type="text" id="filtro-general" placeholder="Buscar producto..."
+                       oninput="filtrarTarjetas('filtro-general','grid-general')"
+                       style="width:100%;padding:.45rem .7rem;border:1px solid #d0a0c8;border-radius:8px;font-size:.9rem;margin-bottom:.7rem">
+                <div class="productos-grid" id="grid-general">
+                    <div class="producto-card" th:each="p : ${productos}">
+                        <span class="nombre" th:text="${p.nombre}">Producto</span>
+                        <span class="precio"
+                              th:text="'$ ' + ${#numbers.formatDecimal(p.precio, 1, 'POINT', 0, 'COMMA')}">$ 0</span>
+                        <form method="post" th:action="@{/betty/pos/agregar}">
+                            <input type="hidden" name="descripcion" th:value="${p.nombre}">
+                            <input type="hidden" name="precioUnit" th:value="${p.precio}">
+                            <input type="hidden" name="cantidad" value="1">
+                            <button type="submit">+ Agregar</button>
+                        </form>
+                    </div>
+                    <p th:if="${productos.isEmpty()}" style="color:#aaa;font-size:.85rem">
+                        No hay productos activos. <a th:href="@{/betty/admin/productos}">Agregar</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Tab Perfumes -->
+            <div id="tab-perfumes" class="betty-panel">
+                <form class="perfume-form" method="post" th:action="@{/betty/pos/agregar-perfume}">
+                    <div style="position:relative">
+                        <label>Fragancia</label>
+                        <!-- Campo visible + valor oculto para el form -->
+                        <input type="hidden" id="fragancia" name="fragancia">
+                        <input type="text" id="fragancia-display" placeholder="Buscar fragancia..."
+                               autocomplete="off" readonly
+                               onclick="abrirDropFragancia()"
+                               style="width:100%;padding:.45rem 2rem .45rem .7rem;border:1px solid #d0a0c8;
+                                      border-radius:8px;font-size:.9rem;cursor:pointer;background:#fff">
+                        <span style="position:absolute;right:.6rem;top:2.1rem;color:#C2185B;pointer-events:none">▾</span>
+                        <div id="drop-fragancia"
+                             style="display:none;position:absolute;z-index:100;width:100%;
+                                    background:#fff;border:1px solid #C2185B;border-radius:8px;
+                                    box-shadow:0 4px 16px rgba(194,24,91,.15);overflow:hidden;top:100%;margin-top:2px">
+                            <div style="padding:.4rem">
+                                <input type="text" id="buscar-fragancia" placeholder="Escribir para filtrar..."
+                                       oninput="filtrarDropFragancia(this.value)"
+                                       style="width:100%;padding:.35rem .6rem;border:1px solid #d0a0c8;
+                                              border-radius:6px;font-size:.85rem;box-sizing:border-box">
+                            </div>
+                            <ul id="lista-fragancias"
+                                style="list-style:none;margin:0;padding:0 0 .3rem;max-height:180px;overflow-y:auto">
+                                <li th:each="f : ${fragancias}"
+                                    th:text="${f.nombre}"
+                                    th:attr="data-val=${f.nombre}"
+                                    onclick="seleccionarFragancia(this)"
+                                    style="padding:.45rem .8rem;cursor:pointer;font-size:.88rem;color:#3a0030">F</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="ml">Mililitros (ml)</label>
+                        <select id="ml" name="ml" required onchange="cargarOnzas(this.value)">
+                            <option value="">-- Seleccione ml --</option>
+                            <option th:each="m : ${mlDisponibles}" th:value="${m}" th:text="${m} + ' ml'">ml</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="onzas">Onzas</label>
+                        <select id="onzas" name="onzas" required onchange="mostrarPrecioPerfume()">
+                            <option value="">-- Primero elija ml --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Precio</label>
+                        <div class="precio-perfume-display" id="precio-perfume-display">
+                            Seleccione ml y onzas
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-betty">+ Agregar al carrito</button>
+                </form>
+                <p th:if="${mlDisponibles.isEmpty()}" style="color:#aaa;font-size:.85rem;margin-top:1rem">
+                    No hay precios configurados. <a th:href="@{/betty/admin/precios-perfume}">Configurar</a>
+                </p>
+            </div>
+
+            <!-- Tab Triple A -->
+            <div id="tab-triplea" class="betty-panel">
+                <input type="text" id="filtro-triplea" placeholder="Buscar fragancia Triple A..."
+                       oninput="filtrarTarjetas('filtro-triplea','grid-triplea')"
+                       style="width:100%;padding:.45rem .7rem;border:1px solid #d0a0c8;border-radius:8px;font-size:.9rem;margin-bottom:.7rem">
+                <div class="productos-grid" id="grid-triplea">
+                    <div class="producto-card" th:each="t : ${tripleA}">
+                        <span class="nombre" th:text="${t.nombre}">Triple A</span>
+                        <span class="precio"
+                              th:text="'$ ' + ${#numbers.formatDecimal(t.precio, 1, 'POINT', 0, 'COMMA')}">$ 0</span>
+                        <form method="post" th:action="@{/betty/pos/agregar}">
+                            <input type="hidden" name="descripcion" th:value="${t.nombre}">
+                            <input type="hidden" name="precioUnit" th:value="${t.precio}">
+                            <input type="hidden" name="cantidad" value="1">
+                            <button type="submit">+ Agregar</button>
+                        </form>
+                    </div>
+                    <p th:if="${tripleA.isEmpty()}" style="color:#aaa;font-size:.85rem">
+                        No hay productos Triple A activos. <a th:href="@{/betty/admin/triple-a}">Agregar</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna derecha: carrito -->
+        <div class="betty-carrito">
+            <h3>&#x1F6D2; Carrito</h3>
+
+            <div class="carrito-vacio" th:if="${carritoVacio}">
+                Agrega productos para empezar
+            </div>
+
+            <table th:unless="${carritoVacio}">
+                <thead>
+                <tr>
+                    <th>Descripción</th>
+                    <th class="num">Precio</th>
+                    <th class="num">Cant.</th>
+                    <th class="num">Subtotal</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item, iterStat : ${carritoItems}">
+                    <td th:text="${item.descripcion}">Producto</td>
+                    <td class="num" th:text="${#numbers.formatDecimal(item.precioUnit, 1, 'POINT', 0, 'COMMA')}">0</td>
+                    <td class="num" th:text="${item.cantidad}">1</td>
+                    <td class="num" th:text="${#numbers.formatDecimal(item.subtotal, 1, 'POINT', 0, 'COMMA')}">0</td>
+                    <td>
+                        <form method="post" th:action="@{/betty/pos/quitar/{i}(i=${iterStat.index})}">
+                            <button type="submit" class="btn-quitar">✕</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div class="betty-total">
+                <span>Total</span>
+                <strong th:text="'$ ' + ${#numbers.formatDecimal(carritoTotal, 1, 'POINT', 0, 'COMMA')}">$ 0</strong>
+            </div>
+
+            <div class="betty-cobro" th:unless="${carritoVacio}">
+                <form method="post" th:action="@{/betty/cobrar}" style="flex:1">
+                    <input type="hidden" name="formaPago" value="EFECTIVO">
+                    <button type="submit" class="btn-efectivo">&#x1F4B5; Efectivo</button>
+                </form>
+                <form method="post" th:action="@{/betty/cobrar}" style="flex:1">
+                    <input type="hidden" name="formaPago" value="TRANSFERENCIA">
+                    <button type="submit" class="btn-transfer">&#x1F4F1; Transferencia</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="none">
+        function cambiarTab(nombre, btn) {
+            document.querySelectorAll('.betty-panel').forEach(p => p.classList.remove('activo'));
+            document.querySelectorAll('.betty-tab').forEach(b => b.classList.remove('activo'));
+            document.getElementById('tab-' + nombre).classList.add('activo');
+            btn.classList.add('activo');
+        }
+
+        // Cache de precios por ml
+        var cachePreciosPerfume = {};
+
+        function cargarOnzas(ml) {
+            var selectOnzas = document.getElementById('onzas');
+            var display = document.getElementById('precio-perfume-display');
+            selectOnzas.innerHTML = '<option value="">Cargando...</option>';
+            display.textContent = '...';
+
+            if (!ml) {
+                selectOnzas.innerHTML = '<option value="">-- Primero elija ml --</option>';
+                display.textContent = 'Seleccione ml y onzas';
+                return;
+            }
+
+            if (cachePreciosPerfume[ml]) {
+                poblarOnzas(cachePreciosPerfume[ml]);
+                return;
+            }
+
+            fetch('/betty/pos/onzas?ml=' + ml)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    cachePreciosPerfume[ml] = data;
+                    poblarOnzas(data);
+                })
+                .catch(function() {
+                    selectOnzas.innerHTML = '<option value="">Error al cargar</option>';
+                });
+        }
+
+        function poblarOnzas(precios) {
+            var selectOnzas = document.getElementById('onzas');
+            selectOnzas.innerHTML = '<option value="">-- Seleccione onzas --</option>';
+            precios.forEach(function(p) {
+                var opt = document.createElement('option');
+                opt.value = p.onzas;
+                opt.textContent = p.onzas + ' oz';
+                opt.dataset.precio = p.precio;
+                selectOnzas.appendChild(opt);
+            });
+            document.getElementById('precio-perfume-display').textContent = 'Seleccione onzas';
+        }
+
+        // --- Dropdown de fragancia ---
+        function abrirDropFragancia() {
+            var drop = document.getElementById('drop-fragancia');
+            drop.style.display = drop.style.display === 'none' ? 'block' : 'none';
+            if (drop.style.display === 'block') {
+                setTimeout(function(){ document.getElementById('buscar-fragancia').focus(); }, 50);
+            }
+        }
+        function filtrarDropFragancia(texto) {
+            texto = texto.toLowerCase();
+            document.querySelectorAll('#lista-fragancias li').forEach(function(li) {
+                li.style.display = li.textContent.toLowerCase().includes(texto) ? '' : 'none';
+            });
+        }
+        function seleccionarFragancia(li) {
+            document.getElementById('fragancia').value = li.dataset.val;
+            document.getElementById('fragancia-display').value = li.textContent;
+            document.getElementById('drop-fragancia').style.display = 'none';
+            document.getElementById('buscar-fragancia').value = '';
+            filtrarDropFragancia('');
+        }
+        document.addEventListener('click', function(e) {
+            var drop = document.getElementById('drop-fragancia');
+            if (drop && !drop.contains(e.target) && e.target.id !== 'fragancia-display') {
+                drop.style.display = 'none';
+            }
+        });
+
+        function filtrarTarjetas(inputId, gridId) {
+            var texto = document.getElementById(inputId).value.toLowerCase();
+            document.querySelectorAll('#' + gridId + ' .producto-card').forEach(function(card) {
+                var nombre = card.querySelector('.nombre').textContent.toLowerCase();
+                card.style.display = nombre.includes(texto) ? '' : 'none';
+            });
+        }
+
+        function mostrarPrecioPerfume() {
+            var selectOnzas = document.getElementById('onzas');
+            var display = document.getElementById('precio-perfume-display');
+            var opt = selectOnzas.options[selectOnzas.selectedIndex];
+            if (opt && opt.dataset.precio) {
+                var precio = parseFloat(opt.dataset.precio);
+                display.textContent = '$ ' + precio.toLocaleString('es-CO');
+            } else {
+                display.textContent = 'Seleccione onzas';
+            }
+        }
+    </script>
+</section>
+</body>
+</html>

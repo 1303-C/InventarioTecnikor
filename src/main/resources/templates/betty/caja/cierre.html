@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{betty/layout-betty :: main(~{::title}, ~{::section})}">
+<head>
+    <title>Caja · Betty</title>
+</head>
+<body>
+<section>
+    <div class="fila-titulo" style="margin-bottom:1rem">
+        <h1 style="color:#8B1A6B">&#x1F4B0; Cierre de Caja</h1>
+        <a class="boton-secundario" th:href="@{/betty/caja/movimientos}">Ver movimientos</a>
+    </div>
+
+    <!-- Filtro de fechas -->
+    <form method="get" th:action="@{/betty/caja}"
+          style="display:flex;gap:1rem;align-items:flex-end;margin-bottom:1.5rem;flex-wrap:wrap">
+        <div class="campo">
+            <label for="desde">Desde</label>
+            <input type="date" id="desde" name="desde" th:value="${desde}">
+        </div>
+        <div class="campo">
+            <label for="hasta">Hasta</label>
+            <input type="date" id="hasta" name="hasta" th:value="${hasta}">
+        </div>
+        <button type="submit" class="boton">Consultar</button>
+    </form>
+
+    <!-- Resumen -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:2rem">
+        <div style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-radius:12px;padding:1.2rem;text-align:center">
+            <div style="font-size:.8rem;color:#2e7d32;font-weight:600;text-transform:uppercase">Ventas Efectivo</div>
+            <div style="font-size:1.6rem;font-weight:800;color:#1b5e20;margin-top:.3rem"
+                 th:text="'$ ' + ${#numbers.formatDecimal(cierre.totalEfectivo(), 1, 'POINT', 0, 'COMMA')}">$ 0</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#e3f2fd,#bbdefb);border-radius:12px;padding:1.2rem;text-align:center">
+            <div style="font-size:.8rem;color:#1565c0;font-weight:600;text-transform:uppercase">Ventas Transferencia</div>
+            <div style="font-size:1.6rem;font-weight:800;color:#0d47a1;margin-top:.3rem"
+                 th:text="'$ ' + ${#numbers.formatDecimal(cierre.totalTransferencia(), 1, 'POINT', 0, 'COMMA')}">$ 0</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#f3e5f5,#e1bee7);border-radius:12px;padding:1.2rem;text-align:center">
+            <div style="font-size:.8rem;color:#6a1b9a;font-weight:600;text-transform:uppercase">Ingresos Caja</div>
+            <div style="font-size:1.6rem;font-weight:800;color:#4a148c;margin-top:.3rem"
+                 th:text="'$ ' + ${#numbers.formatDecimal(cierre.totalIngresos(), 1, 'POINT', 0, 'COMMA')}">$ 0</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#fce4ec,#f8bbd0);border-radius:12px;padding:1.2rem;text-align:center">
+            <div style="font-size:.8rem;color:#ad1457;font-weight:600;text-transform:uppercase">Egresos Caja</div>
+            <div style="font-size:1.6rem;font-weight:800;color:#880e4f;margin-top:.3rem"
+                 th:text="'$ ' + ${#numbers.formatDecimal(cierre.totalEgresos(), 1, 'POINT', 0, 'COMMA')}">$ 0</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#fff8e1,#ffecb3);border-radius:12px;padding:1.2rem;text-align:center;grid-column:span 2 / auto">
+            <div style="font-size:.8rem;color:#f57f17;font-weight:600;text-transform:uppercase">Efectivo Esperado en Caja</div>
+            <div style="font-size:2rem;font-weight:900;color:#e65100;margin-top:.3rem"
+                 th:text="'$ ' + ${#numbers.formatDecimal(cierre.efectivoEsperado(), 1, 'POINT', 0, 'COMMA')}">$ 0</div>
+        </div>
+    </div>
+
+    <!-- Formulario de movimiento -->
+    <div style="background:#fdf7fc;border:1px solid #e0c8e8;border-radius:14px;padding:1.5rem;margin-bottom:2rem">
+        <h3 style="color:#8B1A6B;margin-bottom:1rem">Registrar movimiento manual</h3>
+        <form method="post" th:action="@{/betty/caja/movimientos}"
+              style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;align-items:end">
+            <div class="campo">
+                <label for="tipo">Tipo</label>
+                <select id="tipo" name="tipo" required>
+                    <option value="INGRESO">Ingreso</option>
+                    <option value="EGRESO">Egreso</option>
+                </select>
+            </div>
+            <div class="campo">
+                <label for="monto">Monto</label>
+                <input type="number" id="monto" name="monto" min="1" step="1" required>
+            </div>
+            <div class="campo" style="grid-column:span 2 / auto">
+                <label for="motivo">Motivo</label>
+                <input type="text" id="motivo" name="motivo" required maxlength="200"
+                       placeholder="Ej. Apertura de caja, Pago proveedor...">
+            </div>
+            <div class="campo">
+                <label for="responsable">Responsable</label>
+                <input type="text" id="responsable" name="responsable" placeholder="Nombre">
+            </div>
+            <button type="submit" class="boton">Registrar</button>
+        </form>
+    </div>
+
+    <!-- Lista de ventas del rango -->
+    <h3 style="color:#8B1A6B;margin-bottom:.8rem">Ventas del periodo</h3>
+    <div th:if="${cierre.ventas().isEmpty()}" style="color:#aaa;font-size:.9rem">No hay ventas en el periodo.</div>
+    <table th:unless="${cierre.ventas().isEmpty()}" style="width:100%;border-collapse:collapse">
+        <thead>
+        <tr style="background:#f8f0f5;border-bottom:2px solid #C2185B">
+            <th style="padding:.5rem;text-align:left">#</th>
+            <th style="padding:.5rem;text-align:left">Fecha</th>
+            <th style="padding:.5rem;text-align:left">Pago</th>
+            <th style="padding:.5rem;text-align:right">Total</th>
+            <th style="padding:.5rem;text-align:center">Estado</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="v : ${cierre.ventas()}"
+            th:style="${'ANULADA'.equals(v.estado)} ? 'opacity:.5' : ''"
+            style="border-bottom:1px solid #f0e0f0">
+            <td style="padding:.4rem" th:text="${v.numero}">1</td>
+            <td style="padding:.4rem" th:text="${#temporals.format(v.fecha, 'dd/MM HH:mm')}">--</td>
+            <td style="padding:.4rem" th:text="${v.formaPago}">EFECTIVO</td>
+            <td style="padding:.4rem;text-align:right;font-weight:700;color:#C2185B"
+                th:text="'$ ' + ${#numbers.formatDecimal(v.total, 1, 'POINT', 0, 'COMMA')}">$ 0</td>
+            <td style="padding:.4rem;text-align:center"
+                th:text="${v.estado}"
+                th:style="${'ANULADA'.equals(v.estado)} ? 'color:#e53935' : 'color:#2e7d32'">OK</td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+</body>
+</html>

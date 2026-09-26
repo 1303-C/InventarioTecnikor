@@ -27,7 +27,7 @@
 <body>
 
 <header class="topbar">
-    <a class="marca" th:href="@{/}">
+    <a class="marca" th:href="@{/tecnikor/dashboard}">
         <img class="marca-logo" th:src="@{/img/logo-tecnikor.jpg}" alt="Tecnikor">
         <span class="marca-texto">
             Inventario <strong>Tecnikor</strong>
@@ -35,7 +35,7 @@
         </span>
     </a>
     <nav class="menu">
-        <a th:href="@{/}">Dashboard</a>
+        <a th:href="@{/tecnikor/dashboard}">Dashboard</a>
         <a th:href="@{/ventas/nueva}">Vender</a>
         <a th:href="@{/ventas}">Ventas</a>
         <a th:href="@{/caja}">Caja</a>
@@ -44,6 +44,7 @@
         <a th:href="@{/productos}">Productos</a>
         <a th:href="@{/etiquetas}">Etiquetas</a>
         <a th:href="@{/productos/nuevo}">+ Nuevo producto</a>
+        <a th:href="@{/}" class="btn-selector">&#x21C4; Cambiar negocio</a>
     </nav>
 </header>
 

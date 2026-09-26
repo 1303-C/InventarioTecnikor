@@ -29,7 +29,7 @@ public class DashboardController {
         this.movimientoService = movimientoService;
     }
 
-    @GetMapping("/")
+    @GetMapping("/tecnikor/dashboard")
     public String dashboard(Model model) {
         var stockBajo = productoService.conStockBajo();
 

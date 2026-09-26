@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{betty/layout-betty :: main(~{::title}, ~{::section})}">
+<head>
+    <title>Triple A · Betty Admin</title>
+</head>
+<body>
+<section>
+    <div class="fila-titulo" style="margin-bottom:1.5rem">
+        <h1 style="color:#8B1A6B">Administrar Productos Triple A</h1>
+    </div>
+
+    <!-- Formulario agregar/editar -->
+    <div style="background:#fdf7fc;border:1px solid #e0c8e8;border-radius:14px;padding:1.5rem;margin-bottom:2rem">
+        <h3 style="color:#8B1A6B;margin-bottom:1rem">Nuevo producto Triple A</h3>
+        <form method="post" th:action="@{/betty/admin/triple-a}"
+              style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end">
+            <div class="campo">
+                <label for="nombre">Nombre <span style="color:red">*</span></label>
+                <input type="text" id="nombre" name="nombre" required maxlength="200"
+                       placeholder="Nombre del producto Triple A">
+            </div>
+            <div class="campo">
+                <label for="precio">Precio <span style="color:red">*</span></label>
+                <input type="number" id="precio" name="precio" min="0" step="1" required>
+            </div>
+            <button type="submit" class="boton">Guardar</button>
+        </form>
+    </div>
+
+    <!-- Tabla -->
+    <div th:if="${tripleA.isEmpty()}" style="color:#aaa">No hay productos Triple A registrados.</div>
+
+    <table th:unless="${tripleA.isEmpty()}" style="width:100%;border-collapse:collapse">
+        <thead>
+        <tr style="background:#f8f0f5;border-bottom:2px solid #C2185B">
+            <th style="padding:.6rem;text-align:left">Nombre</th>
+            <th style="padding:.6rem;text-align:right">Precio</th>
+            <th style="padding:.6rem;text-align:center">Activo</th>
+            <th style="padding:.6rem"></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="t : ${tripleA}"
+            th:style="${!t.activo} ? 'opacity:.5' : ''"
+            style="border-bottom:1px solid #f0e0f0">
+            <td style="padding:.5rem" th:text="${t.nombre}">Triple A</td>
+            <td style="padding:.5rem;text-align:right;font-weight:700;color:#C2185B"
+                th:text="'$ ' + ${#numbers.formatDecimal(t.precio, 1, 'POINT', 0, 'COMMA')}">$ 0</td>
+            <td style="padding:.5rem;text-align:center">
+                <span th:text="${t.activo ? 'Sí' : 'No'}"
+                      th:style="${t.activo} ? 'color:#2e7d32;font-weight:700' : 'color:#e53935;font-weight:700'">Sí</span>
+            </td>
+            <td style="padding:.5rem;display:flex;gap:.5rem">
+                <form method="post" th:action="@{/betty/admin/triple-a}" style="display:inline">
+                    <input type="hidden" name="id" th:value="${t.id}">
+                    <input type="text" name="nombre" th:value="${t.nombre}" style="width:140px;font-size:.8rem;padding:.2rem .4rem">
+                    <input type="number" name="precio" th:value="${t.precio}" style="width:80px;font-size:.8rem;padding:.2rem .4rem">
+                    <button type="submit" class="boton-mini">Actualizar</button>
+                </form>
+                <form method="post" th:action="@{/betty/admin/triple-a/{id}/toggle(id=${t.id})}" style="display:inline">
+                    <button type="submit" class="boton-mini"
+                            th:class="${t.activo} ? 'boton-mini boton-peligro' : 'boton-mini'"
+                            th:text="${t.activo} ? 'Desactivar' : 'Activar'">Toggle</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+</body>
+</html>

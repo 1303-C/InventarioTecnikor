@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{betty/layout-betty :: main(~{::title}, ~{::section})}">
+<head>
+    <title>Ventas · Betty</title>
+</head>
+<body>
+<section>
+    <div class="fila-titulo" style="margin-bottom:1rem">
+        <h1 style="color:#8B1A6B">&#x1F4CB; Historial de Ventas</h1>
+        <a class="boton-secundario" th:href="@{/betty/pos}">&#x2190; Volver al POS</a>
+    </div>
+
+    <!-- Filtro de fechas -->
+    <form method="get" th:action="@{/betty/ventas}" style="display:flex;gap:1rem;align-items:flex-end;margin-bottom:1.5rem;flex-wrap:wrap">
+        <div class="campo">
+            <label for="desde">Desde</label>
+            <input type="date" id="desde" name="desde" th:value="${desde}">
+        </div>
+        <div class="campo">
+            <label for="hasta">Hasta</label>
+            <input type="date" id="hasta" name="hasta" th:value="${hasta}">
+        </div>
+        <button type="submit" class="boton">Filtrar</button>
+    </form>
+
+    <div th:if="${ventas.isEmpty()}" class="alerta alerta-info"
+         style="background:#fdf0f8;border:1px solid #C2185B;padding:1rem;border-radius:8px;color:#8B1A6B">
+        No hay ventas en el rango seleccionado.
+    </div>
+
+    <table th:unless="${ventas.isEmpty()}" style="width:100%;border-collapse:collapse">
+        <thead>
+        <tr style="background:#f8f0f5;border-bottom:2px solid #C2185B">
+            <th style="padding:.6rem;text-align:left">#</th>
+            <th style="padding:.6rem;text-align:left">Fecha</th>
+            <th style="padding:.6rem;text-align:left">Forma de pago</th>
+            <th style="padding:.6rem;text-align:right">Total</th>
+            <th style="padding:.6rem;text-align:center">Estado</th>
+            <th style="padding:.6rem"></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="v : ${ventas}"
+            th:style="${'ANULADA'.equals(v.estado)} ? 'opacity:.5;background:#fff5f5' : ''"
+            style="border-bottom:1px solid #f0e0f0">
+            <td style="padding:.5rem" th:text="${v.numero}">1</td>
+            <td style="padding:.5rem"
+                th:text="${#temporals.format(v.fecha, 'dd/MM/yyyy HH:mm')}">--</td>
+            <td style="padding:.5rem" th:text="${v.formaPago}">EFECTIVO</td>
+            <td style="padding:.5rem;text-align:right;font-weight:700;color:#C2185B"
+                th:text="'$ ' + ${#numbers.formatDecimal(v.total, 1, 'POINT', 0, 'COMMA')}">$ 0</td>
+            <td style="padding:.5rem;text-align:center">
+                <span th:text="${v.estado}"
+                      th:style="${'ANULADA'.equals(v.estado)} ? 'color:#e53935;font-weight:600' : 'color:#2e7d32;font-weight:600'">
+                    COMPLETADA
+                </span>
+            </td>
+            <td style="padding:.5rem">
+                <a th:href="@{/betty/ventas/{id}(id=${v.id})}" class="boton-mini">Ver</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{betty/layout-betty :: main(~{::title}, ~{::section})}">
+<head>
+    <title>Fragancias · Betty Admin</title>
+</head>
+<body>
+<section>
+    <div class="fila-titulo" style="margin-bottom:1.5rem">
+        <h1 style="color:#8B1A6B">Administrar Fragancias</h1>
+    </div>
+
+    <!-- Formulario agregar -->
+    <div style="background:#fdf7fc;border:1px solid #e0c8e8;border-radius:14px;padding:1.5rem;margin-bottom:2rem">
+        <h3 style="color:#8B1A6B;margin-bottom:1rem">Nueva fragancia</h3>
+        <form method="post" th:action="@{/betty/admin/fragancias}"
+              style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end">
+            <div class="campo">
+                <label for="nombre">Nombre <span style="color:red">*</span></label>
+                <input type="text" id="nombre" name="nombre" required maxlength="200"
+                       placeholder="Ej. Lavanda, Rosa, Vainilla...">
+            </div>
+            <button type="submit" class="boton">Guardar</button>
+        </form>
+    </div>
+
+    <!-- Tabla -->
+    <div th:if="${fragancias.isEmpty()}" style="color:#aaa">No hay fragancias registradas.</div>
+
+    <table th:unless="${fragancias.isEmpty()}" style="width:100%;border-collapse:collapse">
+        <thead>
+        <tr style="background:#f8f0f5;border-bottom:2px solid #C2185B">
+            <th style="padding:.6rem;text-align:left">Nombre</th>
+            <th style="padding:.6rem;text-align:center">Activo</th>
+            <th style="padding:.6rem"></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="f : ${fragancias}"
+            th:style="${!f.activo} ? 'opacity:.5' : ''"
+            style="border-bottom:1px solid #f0e0f0">
+            <td style="padding:.5rem" th:text="${f.nombre}">Fragancia</td>
+            <td style="padding:.5rem;text-align:center">
+                <span th:text="${f.activo ? 'Sí' : 'No'}"
+                      th:style="${f.activo} ? 'color:#2e7d32;font-weight:700' : 'color:#e53935;font-weight:700'">Sí</span>
+            </td>
+            <td style="padding:.5rem;display:flex;gap:.5rem">
+                <!-- Editar nombre -->
+                <form method="post" th:action="@{/betty/admin/fragancias}" style="display:inline">
+                    <input type="hidden" name="id" th:value="${f.id}">
+                    <input type="text" name="nombre" th:value="${f.nombre}" style="width:180px;font-size:.8rem;padding:.2rem .4rem">
+                    <button type="submit" class="boton-mini">Actualizar</button>
+                </form>
+                <form method="post" th:action="@{/betty/admin/fragancias/{id}/toggle(id=${f.id})}" style="display:inline">
+                    <button type="submit" class="boton-mini"
+                            th:class="${f.activo} ? 'boton-mini boton-peligro' : 'boton-mini'"
+                            th:text="${f.activo} ? 'Desactivar' : 'Activar'">Toggle</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</section>
+</body>
+</html>
